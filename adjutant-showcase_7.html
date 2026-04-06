@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eProxim Adjutant — What Real AI Looks Like</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0E1014;--card:#1A1D24;--gold:#E8A020;--gold2:#F5B83A;
+  --golddim:rgba(232,160,32,0.10);--bordergold:rgba(232,160,32,0.22);
+  --red:#E84848;--reddim:rgba(232,72,72,0.10);--redborder:rgba(232,72,72,0.25);
+  --green:#22D47E;--greendim:rgba(34,212,126,0.10);--greenborder:rgba(34,212,126,0.25);
+  --blue:#4A9EFF;--bluedim:rgba(74,158,255,0.10);
+  --white:#F2EFE9;--off:#B0B8C8;--muted:#5A6272;--border:rgba(255,255,255,0.07);
+}
+html,body{margin:0;padding:0;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
+/* INTRO */
+#introScreen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;padding:40px 24px;text-align:center;}
+.i-pre{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;animation:fadeUp .8s ease both;}
+.i-h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,70px);font-weight:900;line-height:1.0;margin-bottom:12px;animation:fadeUp .8s .1s ease both;}
+.i-h1 em{color:var(--gold);font-style:italic;}
+.i-p{font-size:16px;color:var(--off);max-width:480px;margin:0 auto 18px;line-height:1.7;animation:fadeUp .8s .2s ease both;}
+.i-def{background:var(--golddim);border:1px solid var(--bordergold);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:14px 22px;max-width:420px;margin:0 auto 26px;text-align:left;animation:fadeUp .8s .3s ease both;}
+.dw{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--gold);margin-bottom:2px;}
+.do{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;}
+.dm{font-size:13px;color:var(--off);font-style:italic;line-height:1.5;}
+.i-btn{background:var(--gold);color:#0C0E12;border:none;border-radius:8px;padding:15px 50px;font-family:'DM Mono',monospace;font-size:14px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;box-shadow:0 0 40px rgba(232,160,32,.35);animation:fadeUp .8s .4s ease both;}
+.i-btn:hover{background:var(--gold2);box-shadow:0 0 64px rgba(232,160,32,.55);transform:translateY(-2px);}
+.i-stats{display:flex;gap:40px;margin-top:26px;animation:fadeUp .8s .5s ease both;}
+.is{text-align:center;}
+.is-n{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--gold);display:block;margin-bottom:3px;}
+.is-l{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+/* APP */
+#app{position:relative;z-index:1;display:none;}
+/* NAV */
+.gnav{position:fixed;top:0;left:0;right:0;background:rgba(14,16,20,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:60;padding:0 18px;display:flex;align-items:center;height:52px;gap:10px;}
+.gnav-brand{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;white-space:nowrap;}
+.gnav-brand em{color:var(--gold);font-style:italic;}
+.gnav-sp{flex:1;}
+.gdots{display:flex;gap:5px;align-items:center;}
+.gdot{width:8px;height:8px;border-radius:50%;background:var(--border);border:1px solid var(--border);cursor:pointer;transition:all .25s;}
+.gdot:hover{background:var(--muted);}
+.gdot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px var(--gold);}
+.gdot.done{background:rgba(34,212,126,.5);border-color:var(--green);}
+.gctr{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;white-space:nowrap;}
+#capToggleBtn{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;white-space:nowrap;margin-left:8px;}
+/* PROGRESS BARS */
+.sprog{position:fixed;top:52px;left:0;right:0;height:3px;background:var(--border);z-index:59;}
+.spfill{height:100%;background:var(--gold);transition:width .5s ease;width:0%;}
+.step-prog{position:fixed;top:55px;left:0;right:0;height:2px;z-index:58;}
+.step-prog-fill{height:100%;background:rgba(232,160,32,.4);transition:width .4s ease;width:0%;}
+/* SCENARIOS */
+.scenarios{padding-top:57px;padding-bottom:320px;}
+.scenario{display:none;flex-direction:column;min-height:calc(100vh - 57px);}
+.scenario.active{display:flex;}
+/* SCENE HEADER */
+.shdr{padding:28px 28px 16px;text-align:center;}
+.snum{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-bottom:7px;opacity:0;animation:fadeUp .5s .1s ease both;}
+.stitle{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,40px);font-weight:900;margin-bottom:5px;opacity:0;animation:fadeUp .5s .2s ease both;}
+.ssub{font-size:13px;color:var(--off);max-width:480px;margin:0 auto 14px;line-height:1.6;opacity:0;animation:fadeUp .5s .3s ease both;}
+.roi-ribbon{display:flex;justify-content:center;gap:0;margin-bottom:20px;opacity:0;animation:fadeUp .5s .4s ease both;}
+.roi-item{text-align:center;padding:8px 20px;border:1px solid var(--bordergold);background:var(--golddim);}
+.roi-item:first-child{border-radius:6px 0 0 6px;}.roi-item:last-child{border-radius:0 6px 6px 0;}.roi-item+.roi-item{border-left:none;}
+.roi-v{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold);display:block;margin-bottom:1px;}
+.roi-l{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+/* STORY */
+.story{max-width:760px;width:100%;margin:0 auto;padding:0 22px 40px;display:flex;flex-direction:column;gap:0;}
+body.cap-right .story{max-width:560px;margin-left:22px;margin-right:auto;}
+body.cap-right .shdr{padding-right:360px;}
+/* PHASE HEADER */
+.phase-hdr{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:10px 10px 0 0;border:1px solid var(--border);border-bottom:none;margin-top:28px;}
+.phase-hdr.chat-hdr{background:rgba(232,72,72,.05);border-color:var(--redborder);}
+.phase-hdr.adj-hdr{background:var(--golddim);border-color:var(--bordergold);}
+.phdr-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.chat-hdr .phdr-dot{background:var(--red);box-shadow:0 0 8px var(--red);}
+.adj-hdr .phdr-dot{background:var(--gold);box-shadow:0 0 8px var(--gold);}
+.phdr-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;flex:1;}
+.chat-hdr .phdr-title{color:var(--red);}.adj-hdr .phdr-title{color:var(--gold);}
+.phdr-tag{font-family:'DM Mono',monospace;font-size:9px;padding:3px 9px;border-radius:3px;text-transform:uppercase;letter-spacing:.08em;}
+.chat-hdr .phdr-tag{background:var(--reddim);color:var(--red);border:1px solid var(--redborder);}
+.adj-hdr .phdr-tag{background:var(--golddim);color:var(--gold);border:1px solid var(--bordergold);}
+/* STEPS */
+.steps{border:1px solid var(--border);border-radius:0 0 10px 10px;padding:18px;background:var(--card);display:flex;flex-direction:column;gap:0;}
+.chat-steps{border-color:var(--redborder);}.adj-steps{border-color:var(--bordergold);}
+.step{display:flex;gap:0;position:relative;opacity:0;transform:translateY(10px);transition:opacity .45s ease,transform .45s ease;}
+.step.show{opacity:1;transform:translateY(0);}
+.step-left{display:flex;flex-direction:column;align-items:center;width:42px;flex-shrink:0;}
+.step-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;z-index:1;}
+.chat-icon{background:rgba(232,72,72,.12);border:1px solid var(--redborder);}
+.adj-icon{background:var(--golddim);border:1px solid var(--bordergold);}
+.step-line{width:2px;flex:1;min-height:14px;margin:3px 0;}
+.step:last-child .step-line{display:none;}
+.step-right{flex:1;padding:0 0 18px 12px;}
+.step:last-child .step-right{padding-bottom:4px;}
+.step-title{font-size:13.5px;font-weight:500;color:var(--white);margin-bottom:4px;line-height:1.3;}
+.step-body{font-size:12.5px;color:var(--off);line-height:1.6;margin-bottom:6px;}
+/* BALLOON */
+.balloon{position:relative;border-radius:10px;padding:9px 13px;font-size:12.5px;line-height:1.5;margin-bottom:7px;font-style:italic;}
+.balloon.user-balloon{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);margin-left:10%;}
+.balloon.bot-balloon{background:rgba(232,72,72,.08);border:1px solid var(--redborder);}
+.balloon .who{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;display:block;font-style:normal;}
+.balloon.user-balloon .who{color:rgba(255,255,255,.4);}
+.balloon.bot-balloon .who{color:var(--red);}
+/* ANNOTATION */
+.annotation{display:flex;align-items:flex-start;gap:9px;border-radius:7px;padding:9px 13px;margin-top:7px;font-size:12px;line-height:1.5;border:1px dashed;}
+.annotation .aa{font-size:14px;flex-shrink:0;margin-top:1px;}
+.an-red{background:rgba(232,72,72,.05);border-color:rgba(232,72,72,.18);color:rgba(232,72,72,.85);}
+.an-gold{background:var(--golddim);border-color:var(--bordergold);color:var(--gold);}
+.an-green{background:var(--greendim);border-color:var(--greenborder);color:var(--green);}
+/* STEP TAG */
+.step-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+.tg-done{background:var(--greendim);color:var(--green);}
+.tg-sent{background:var(--golddim);color:var(--gold);}
+.tg-arm{background:var(--reddim);color:var(--red);}
+.tg-blue{background:var(--bluedim);color:var(--blue);}
+.tg-wait{background:rgba(90,98,114,.12);color:var(--muted);}
+/* VERDICT */
+.verdict-banner{border-radius:10px;padding:16px 20px;margin-top:16px;display:none;}
+.verdict-banner.show{display:block;animation:popIn .5s ease both;}
+.verdict-banner.bad{background:rgba(232,72,72,.07);border:1px solid var(--redborder);}
+.verdict-banner.good{background:var(--greendim);border:1px solid var(--greenborder);}
+.vb-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:7px;}
+.verdict-banner.bad .vb-label{color:var(--red);}
+.verdict-banner.good .vb-label{color:var(--green);}
+.vb-text{font-size:13.5px;line-height:1.6;}
+.verdict-banner.bad .vb-text{color:#ff9090;}
+.verdict-banner.good .vb-text{color:var(--white);}
+/* TRANSITION */
+.transition-block{display:none;flex-direction:column;align-items:center;padding:24px 0 10px;gap:10px;}
+.transition-block.show{display:flex;animation:fadeUp .6s ease both;}
+.tb-line{width:2px;height:28px;background:linear-gradient(to bottom,var(--red),var(--gold));}
+.tb-arrow{font-size:22px;color:var(--gold);}
+.tb-label{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--white);text-align:center;line-height:1.3;}
+.tb-label em{color:var(--gold);font-style:italic;}
+.tb-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+/* CAPTION BAR */
+#captionBar{position:fixed;bottom:72px;left:0;right:0;z-index:55;pointer-events:none;padding:0 32px;transition:all .4s ease;}
+body.cap-right #captionBar{bottom:auto;top:57px;left:auto;right:0;width:340px;height:calc(100vh - 57px - 66px);padding:16px 12px;display:flex;flex-direction:column;justify-content:flex-start;overflow:hidden;}
+body.cap-right .cap-bubble{flex-direction:column;gap:12px;}
+body.cap-right .cap-bubble .cap-phase-badge{align-self:flex-start;}
+body.cap-right .cap-main{font-size:clamp(15px,1.8vw,20px);}
+.cap-bubble{background:rgba(10,12,16,.92);backdrop-filter:blur(20px);border:1px solid var(--bordergold);border-radius:14px;padding:18px 28px;display:flex;align-items:center;gap:18px;box-shadow:0 -4px 40px rgba(0,0,0,.5);opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease;}
+.cap-bubble.show{opacity:1;transform:translateY(0);}
+.cap-phase-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;padding:5px 12px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
+.cap-phase-badge.red{background:var(--reddim);color:var(--red);border:1px solid var(--redborder);}
+.cap-phase-badge.gold{background:var(--golddim);color:var(--gold);border:1px solid var(--bordergold);}
+.cap-phase-badge.green{background:var(--greendim);color:var(--green);border:1px solid var(--greenborder);}
+.cap-text-wrap{flex:1;}
+.cap-step-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
+.cap-main{font-family:'Playfair Display',serif;font-size:clamp(17px,2.4vw,26px);font-weight:700;color:var(--white);line-height:1.25;}
+.cap-sub{font-size:13px;color:var(--muted);margin-top:4px;font-style:italic;}
+/* CONTROL BAR */
+#controlBar{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:58;display:flex;align-items:center;padding:10px 20px;gap:14px;height:66px;}
+.ctrl-scene-btn{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:0 16px;height:42px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;}
+.ctrl-scene-btn:hover{color:var(--white);border-color:rgba(255,255,255,.2);}
+#pauseBtn{width:52px;height:52px;border-radius:50%;background:var(--gold);color:#0C0E12;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;transition:all .2s;box-shadow:0 0 24px rgba(232,160,32,.4);}
+#pauseBtn:hover{background:var(--gold2);box-shadow:0 0 36px rgba(232,160,32,.6);transform:scale(1.06);}
+.ctrl-step-btn{background:var(--card);color:var(--off);border:1px solid var(--border);border-radius:7px;padding:0 16px;height:42px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;}
+.ctrl-step-btn:hover{color:var(--white);}
+.ctrl-info{flex:1;text-align:center;}
+.ctrl-info-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--white);margin-bottom:2px;}
+.ctrl-info-title em{color:var(--gold);font-style:italic;}
+.ctrl-info-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;}
+.step-dots{display:flex;gap:4px;align-items:center;flex-shrink:0;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--border);border:1px solid var(--border);transition:all .2s;}
+.sdot.done-chat{background:rgba(232,72,72,.6);border-color:var(--red);}
+.sdot.done-adj{background:rgba(34,212,126,.6);border-color:var(--green);}
+.sdot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 6px var(--gold);}
+/* IMPACT */
+#impactScreen{min-height:100vh;padding:80px 32px 160px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.imp-pre{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;animation:fadeUp .7s ease both;}
+.imp-h{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,54px);font-weight:900;line-height:1.05;margin-bottom:10px;animation:fadeUp .7s .1s ease both;}
+.imp-h em{color:var(--gold);font-style:italic;}
+.imp-p{font-size:15px;color:var(--off);max-width:500px;margin:0 auto 30px;line-height:1.6;animation:fadeUp .7s .2s ease both;}
+.imp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:740px;width:100%;margin-bottom:28px;animation:fadeUp .7s .3s ease both;}
+.imp-card{background:var(--card);border:1px solid var(--bordergold);border-radius:12px;padding:18px 12px;text-align:center;}
+.imp-num{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--gold);display:block;margin-bottom:4px;line-height:1;}
+.imp-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;line-height:1.4;}
+.imp-vs{max-width:600px;background:var(--golddim);border:1px solid var(--bordergold);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:16px 20px;text-align:left;margin-bottom:24px;animation:fadeUp .7s .4s ease both;}
+.ivl{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;}
+.ivt{font-size:14px;color:var(--white);line-height:1.6;}
+.imp-cta{animation:fadeUp .7s .5s ease both;display:flex;flex-direction:column;align-items:center;gap:9px;}
+.imp-btn{background:var(--gold);color:#0C0E12;border:none;border-radius:8px;padding:14px 44px;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;box-shadow:0 0 36px rgba(232,160,32,.3);}
+.imp-btn:hover{background:var(--gold2);transform:translateY(-2px);}
+.imp-url{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);letter-spacing:.1em;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div id="introScreen">
+  <div class="i-pre">eProxim &middot; The Adjutant Showcase &middot; 10 Scenarios</div>
+  <h1 class="i-h1">This is what<br>real AI <em>looks like.</em></h1>
+  <p class="i-p">Watch a chatbot fail &mdash; then watch an Adjutant handle it. Ten scenarios. The contrast is impossible to ignore.</p>
+  <div class="i-def">
+    <div class="dw">Adjutant</div>
+    <div class="do">Latin &middot; adjutare &middot; Military rank &middot; 17th century</div>
+    <div class="dm">&ldquo;An officer who executes orders and handles everything &mdash; so the commander can lead.&rdquo;</div>
+  </div>
+  <button class="i-btn" id="startBtn">&#9654;&nbsp; Begin the Demonstration</button>
+  <div class="i-stats">
+    <div class="is"><span class="is-n">10</span><span class="is-l">Scenarios</span></div>
+    <div class="is"><span class="is-n">0</span><span class="is-l">Chatbot actions</span></div>
+    <div class="is"><span class="is-n">47</span><span class="is-l">Adjutant actions</span></div>
+  </div>
+</div>
+
+<div id="app">
+  <nav class="gnav">
+    <div class="gnav-brand"><em>e</em>Proxim &middot; Adjutant</div>
+    <div class="gnav-sp"></div>
+    <div class="gdots" id="gnavDots"></div>
+    <div class="gctr" id="gnavCtr">1 / 10</div>
+    <button id="capToggleBtn">&#11015; Bottom</button>
+  </nav>
+  <div class="sprog"><div class="spfill" id="spfill"></div></div>
+  <div class="step-prog"><div class="step-prog-fill" id="stepProgFill"></div></div>
+  <div class="scenarios" id="scenariosWrap"></div>
+  <div id="impactScreen" style="display:none;">
+    <div class="imp-pre">The Adjutant Verdict</div>
+    <h2 class="imp-h">Every day without one,<br>you&rsquo;re <em>leaving this on the table.</em></h2>
+    <p class="imp-p">Across 10 real scenarios &mdash; this is what an Adjutant delivers for a professional services firm, every single week.</p>
+    <div class="imp-grid">
+      <div class="imp-card"><span class="imp-num">47</span><span class="imp-lbl">Autonomous<br>actions taken</span></div>
+      <div class="imp-card"><span class="imp-num">0</span><span class="imp-lbl">Human hours<br>spent</span></div>
+      <div class="imp-card"><span class="imp-num">24/7</span><span class="imp-lbl">Always<br>working</span></div>
+      <div class="imp-card"><span class="imp-num">$127k</span><span class="imp-lbl">Annual saving<br>vs hiring</span></div>
+      <div class="imp-card"><span class="imp-num">Day 1</span><span class="imp-lbl">Fully<br>operational</span></div>
+      <div class="imp-card"><span class="imp-num">0</span><span class="imp-lbl">Sick days.<br>Ever.</span></div>
+    </div>
+    <div class="imp-vs">
+      <div class="ivl">The Bottom Line</div>
+      <div class="ivt">A chatbot answers questions when asked. An Adjutant runs your firm &mdash; end to end, around the clock, without being asked. The gap between them is not a feature difference. It is the difference between a tool and a team member who never stops working.</div>
+    </div>
+    <div class="imp-cta">
+      <button class="imp-btn" id="impBtn">Deploy Your First Adjutant</button>
+      <div class="imp-url">eproxim.com</div>
+    </div>
+  </div>
+  <div id="captionBar">
+    <div class="cap-bubble" id="capBubble">
+      <div class="cap-phase-badge red" id="capBadge">Chatbot</div>
+      <div class="cap-text-wrap">
+        <div class="cap-step-label" id="capStepLabel">Step 1</div>
+        <div class="cap-main" id="capMain">Loading...</div>
+        <div class="cap-sub" id="capSub"></div>
+      </div>
+    </div>
+  </div>
+  <div id="controlBar">
+    <button class="ctrl-scene-btn" id="prevSceneBtn">&#9664;&#9664; Prev</button>
+    <button class="ctrl-step-btn" id="stepBackBtn">&#9664; Step</button>
+    <button id="pauseBtn">&#9646;&#9646;</button>
+    <button class="ctrl-step-btn" id="stepFwdBtn">Step &#9654;</button>
+    <div class="ctrl-info">
+      <div class="ctrl-info-title" id="ctrlTitle"><em>The Invoice Chase</em></div>
+      <div class="ctrl-info-sub" id="ctrlSub">Scenario 1 of 10</div>
+    </div>
+    <div class="step-dots" id="stepDots"></div>
+    <button class="ctrl-scene-btn" id="nextSceneBtn">Next &#9654;&#9654;</button>
+  </div>
+</div>
+
+
+<script id="sdata" type="application/json">
+[{"num": "01", "title": "The Invoice Chase", "sub": "Three invoices are overdue. Watch what each one does about it.", "roi": [{"v": "$8,240", "l": "Invoice value"}, {"v": "47 days", "l": "Overdue"}, {"v": "0 hrs", "l": "Staff time"}], "steps": [{"ph": "chat", "ico": "💬", "ic": "chat-icon", "title": "The chatbot has been sitting idle all morning", "body": "It has no idea three invoices are overdue. It will not check. It will not act. It is waiting for someone to ask.", "tag": "tg-wait", "tagTxt": "Idle — doing nothing", "ann": {"cls": "an-red", "a": "⚠️", "t": "The chatbot only knows what you tell it. If nobody asks — nothing happens."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "The chatbot has no idea invoices are overdue.", "sub": "Idle all morning. Waiting."}}, {"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "Your team finally notices and asks", "bal": {"who": "You", "cls": "user-balloon", "txt": "Which of our invoices are overdue?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 2", "main": "Someone has to notice and ask.", "sub": "This took until mid-morning."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "The chatbot lists the invoices — and stops there", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "Your overdue invoices:\n• Invoice #4821 — Acme Corp — $8,240 — 47 days\n• Invoice #3902 — Bell & Associates — $3,100 — 31 days\n• Invoice #4105 — Mercer Group — $5,500 — 22 days\n\nWould you like me to draft a chase email?"}, "ann": {"cls": "an-red", "a": "❌", "t": "It listed them. That is it. The work of chasing them — still yours to do."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 3", "main": "Listed. Not chased. Still your job.", "sub": "You still have to draft, address, and send every email yourself."}}, {"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask it to draft the email", "bal": {"who": "You", "cls": "user-balloon", "txt": "Yes, draft a chase email for Acme Corp."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 4", "main": "You ask it to draft one email.", "sub": "Bell and Associates and Mercer Group are still untouched."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Draft produced — still not sent", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "\"Dear Acme Corp, I am writing to follow up on Invoice #4821 for $8,240...\"\n\nDraft ready. You will need to address it to the right contact and send it yourself."}, "tag": "tg-wait", "tagTxt": "Waiting on you", "ann": {"cls": "an-red", "a": "❌", "t": "Still not sent. Bell and Mercer untouched. 15 minutes to achieve nothing."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "15 minutes. 3 invoices still outstanding.", "sub": "You did all the work. The chatbot produced text."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "Same situation. Completely different outcome.", "sub": "Watch what happens when an Adjutant is deployed."}}, {"ph": "adj", "ico": "🔍", "ic": "adj-icon", "title": "Adjutant scans accounts receivable — 3:12 AM", "body": "Nobody asked it to. Every night, automatically, the Adjutant audits your full AR ledger. Tonight it finds three overdue invoices.", "tag": "tg-done", "tagTxt": "847 invoices checked", "ann": {"cls": "an-gold", "a": "⚡", "t": "Happened while you slept. No instruction needed."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Scanning AR at 3:12 AM. Nobody asked.", "sub": "Every night. Automatic."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Chase email sent to Acme Corp — 3:14 AM", "body": "Using your firm's approved template, the Adjutant drafts and sends a professional chase to the correct AP contact.", "tag": "tg-sent", "tagTxt": "Sent to ap@acmecorp.com", "ann": {"cls": "an-gold", "a": "⚡", "t": "Personalised. From your domain. Your template. Zero input required."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 2", "main": "Chase email sent. Automatically.", "sub": "Personalised. Correct contact. Your template. 3:14 AM."}}, {"ph": "adj", "ico": "📩", "ic": "adj-icon", "title": "Acme Corp replies — response logged", "bal": {"who": "Acme Corp AP", "cls": "user-balloon", "txt": "\"Hi — apologies for the delay. Payment is processing this week.\""}, "tag": "tg-done", "tagTxt": "Response logged · AR updated", "ann": {"cls": "an-green", "a": "✓", "t": "Adjutant logs the response, records the commitment, updates your AR system. Automatically."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 3", "main": "Reply received. Logged. AR updated.", "sub": "Commitment recorded. Follow-up armed if they don't pay."}}, {"ph": "adj", "ico": "⏰", "ic": "adj-icon", "title": "Follow-up sequence armed automatically", "body": "Because the payment is promised but not received, the Adjutant sets a follow-up for day 3 and an escalation alert to you on day 7.", "tag": "tg-arm", "tagTxt": "Armed", "ann": {"cls": "an-gold", "a": "⚡", "t": "Only if something goes wrong will you be involved."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 4", "main": "Follow-up armed. Escalation set.", "sub": "Day 3: auto follow-up. Day 7: alert to you. Only if needed."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Bell and Mercer chased — 3:16 AM", "body": "Both remaining overdue invoices chased with professional emails. All three handled before 4am.", "tag": "tg-sent", "tagTxt": "Both sent", "ann": {"cls": "an-green", "a": "✓", "t": "All three invoices chased before 4am. Team arrives to a clean AR board."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "5 actions. All 3 invoices chased. 0 minutes of your time.", "sub": "Done before you woke up."}}], "cv": {"lbl": "Chatbot Result", "txt": "You spent 15 minutes asking questions and reviewing a draft. The invoice is still outstanding. Bell and Mercer have not been touched."}, "fv": {"lbl": "Adjutant Result", "txt": "5 autonomous actions. All three invoices chased. Response logged. Follow-up armed. Your team did not touch this once — and it was done before they woke up."}}, {"num": "02", "title": "New Client Intake", "sub": "A prospect submits an enquiry at 11:42 PM. First response wins.", "roi": [{"v": "< 2 min", "l": "Response time"}, {"v": "100%", "l": "Capture rate"}, {"v": "$0", "l": "Staff cost"}], "steps": [{"ph": "chat", "ico": "💬", "ic": "chat-icon", "title": "Chatbot is unaware of the new enquiry", "body": "Morrison and Co submitted an enquiry at 11:42 PM. The chatbot has no idea.", "tag": "tg-wait", "tagTxt": "Idle", "ann": {"cls": "an-red", "a": "⚠️", "t": "The prospect is waiting. First response wins the mandate."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "Enquiry submitted. Chatbot unaware.", "sub": "Sitting idle. Nobody told it."}}, {"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "Next morning — you tell the chatbot", "bal": {"who": "You", "cls": "user-balloon", "txt": "We have a new enquiry from Morrison and Co. Can you help me draft a follow-up?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 2", "main": "12 hours later. You finally tell it.", "sub": "Morrison and Co waited overnight."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Generic draft produced", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "\"Dear Morrison and Co,\n\nThank you for your enquiry. We would love to schedule a call...\n\n[Your name]\"\n\nPlease personalise and send from your email client."}, "tag": "tg-wait", "tagTxt": "Still not sent", "ann": {"cls": "an-red", "a": "❌", "t": "Waited 12 hours. Still not sent. Still needs personalising. No call booked."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "12-hour delay. Still not booked.", "sub": "Generic draft. Needs personalising. Needs sending."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "Same enquiry. Responded to in 60 seconds.", "sub": "At 11:42 PM."}}, {"ph": "adj", "ico": "📬", "ic": "adj-icon", "title": "Enquiry detected — 11:42 PM", "body": "The Adjutant detects the form submission the instant it arrives.", "tag": "tg-done", "tagTxt": "Detected instantly", "ann": {"cls": "an-gold", "a": "⚡", "t": "Real-time. The moment Morrison and Co submit — the Adjutant is already working."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Enquiry received. Adjutant active.", "sub": "11:42 PM. Instant detection."}}, {"ph": "adj", "ico": "🔍", "ic": "adj-icon", "title": "Prospect qualified — 11:43 PM", "body": "Cross-referenced against your ICP: revenue ~£4M, legal industry, high fit score.", "tag": "tg-done", "tagTxt": "High fit · Legal · ~£4M", "ann": {"cls": "an-gold", "a": "⚡", "t": "You only spend time on qualified prospects."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 2", "main": "Qualified in under a minute.", "sub": "High fit. Legal. £4M revenue."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Personalised welcome sent — 11:43 PM", "bal": {"who": "Adjutant — on your behalf", "cls": "user-balloon", "txt": "\"Dear Mr Morrison,\n\nThank you for reaching out — we would love to help. I have reserved time this week for a 30-minute call. Please use the link below to book a slot.\""}, "tag": "tg-sent", "tagTxt": "Sent 11:43 PM", "ann": {"cls": "an-green", "a": "✓", "t": "Addressed by name. Sent within 60 seconds. From your domain."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 3", "main": "Personalised email sent. 11:43 PM.", "sub": "By name. Your domain. 60 seconds after enquiry."}}, {"ph": "adj", "ico": "📅", "ic": "adj-icon", "title": "Intake call booked — 11:44 PM", "body": "Mr Morrison books Wednesday 10am via the Calendly link. Confirmation sent.", "tag": "tg-done", "tagTxt": "Wed 10am · Confirmed", "ann": {"cls": "an-green", "a": "✓", "t": "Call booked before Morrison and Co went to sleep."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 4", "main": "Call booked. Wednesday 10am.", "sub": "Morrison and Co confirmed before they went to sleep."}}, {"ph": "adj", "ico": "📋", "ic": "adj-icon", "title": "Client file created — 11:44 PM", "body": "CRM record, matter code, and onboarding checklist initiated automatically.", "tag": "tg-done", "tagTxt": "File ready", "ann": {"cls": "an-green", "a": "✓", "t": "Team arrives in the morning to a fully prepared new client file."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "5 actions. 2 minutes. Call booked.", "sub": "Your team wakes up to a confirmed meeting and a new client file."}}], "cv": {"lbl": "Chatbot Result", "txt": "Morrison and Co waited 12 hours for a response. The prospect may have already engaged a competitor."}, "fv": {"lbl": "Adjutant Result", "txt": "Qualified, welcomed by name, call booked, and file created in 2 minutes. At 11:44 PM."}}, {"num": "03", "title": "Month-End Close", "sub": "2,847 transactions need reconciling. The 9am deadline is hours away.", "roi": [{"v": "2,847", "l": "Transactions"}, {"v": "0 delays", "l": "Month-end"}, {"v": "3 hrs", "l": "Time saved"}], "steps": [{"ph": "chat", "ico": "💬", "ic": "chat-icon", "title": "The chatbot has no awareness of month-end", "body": "2,847 transactions need reconciling. The chatbot does not know and will not do anything unless asked.", "tag": "tg-wait", "tagTxt": "Idle", "ann": {"cls": "an-red", "a": "⚠️", "t": "Your accountant is about to spend 3 hours on a task that could run overnight automatically."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "Month-end approaching. Chatbot: unaware.", "sub": "Waiting for a question."}}, {"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask for help", "bal": {"who": "You", "cls": "user-balloon", "txt": "Can you help me with month-end reconciliation?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 2", "main": "You have to ask. Manually.", "sub": "Only then does anything happen."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Chatbot hands you a checklist", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "Here is a month-end reconciliation checklist:\n\n• Export bank statement\n• Match transactions in your system\n• Investigate discrepancies\n• Post journal entries\n\nGood luck — let me know if you have questions."}, "tag": "tg-wait", "tagTxt": "Still your job", "ann": {"cls": "an-red", "a": "❌", "t": "A checklist of things you already knew. Nothing has been done. 3 hours of work ahead."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "A checklist. Nothing reconciled.", "sub": "You have 3 hours of manual work ahead. 9am is approaching."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "2,847 transactions. Reconciled overnight.", "sub": "Board report delivered by 12:03 AM."}}, {"ph": "adj", "ico": "🔄", "ic": "adj-icon", "title": "Reconciliation initiated — 11:00 PM", "body": "On the last night of every month, the Adjutant automatically runs the full reconciliation. No instruction required.", "tag": "tg-done", "tagTxt": "Auto-initiated", "ann": {"cls": "an-gold", "a": "⚡", "t": "Running while your accountant sleeps. Every month. Without fail."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Reconciliation running. 11:00 PM.", "sub": "Auto-initiated. Every month-end."}}, {"ph": "adj", "ico": "✅", "ic": "adj-icon", "title": "2,844 transactions matched — 11:47 PM", "body": "99.9% match rate. Processed in 47 minutes.", "tag": "tg-done", "tagTxt": "2,844 matched", "ann": {"cls": "an-green", "a": "✓", "t": "What takes a human 3 hours takes the Adjutant 47 minutes."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "2,844 of 2,847 matched.", "sub": "47 minutes. 99.9% accuracy."}}, {"ph": "adj", "ico": "⚠️", "ic": "adj-icon", "title": "3 anomalies flagged for your review", "body": "$94,200, $1,840, and $220 — queued for morning review with full context.", "tag": "tg-arm", "tagTxt": "3 items for you", "ann": {"cls": "an-gold", "a": "⚡", "t": "Only the exceptions reach your team. Everything else is done."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 3", "main": "Only 3 items need your eye.", "sub": "Everything else is done."}}, {"ph": "adj", "ico": "📊", "ic": "adj-icon", "title": "Board report generated — 12:02 AM", "body": "P&L, cash flow, variance analysis — formatted to your board pack template.", "tag": "tg-done", "tagTxt": "Generated", "ann": {"cls": "an-green", "a": "✓", "t": "Ready 9 hours before deadline."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 4", "main": "Board report generated. 12:02 AM.", "sub": "Your template. Ready 9 hours before deadline."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Delivered to CFO — 12:03 AM", "body": "Board pack emailed to CFO and Managing Partner. Filed. Month closed.", "tag": "tg-sent", "tagTxt": "Delivered", "ann": {"cls": "an-green", "a": "✓", "t": "Done by midnight. Team arrives to a closed month."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "Month closed. 9 hours before deadline.", "sub": "Your team arrives to a done job."}}], "cv": {"lbl": "Chatbot Result", "txt": "You got a checklist. Someone worked until midnight. The board report was late."}, "fv": {"lbl": "Adjutant Result", "txt": "2,847 transactions processed overnight. Board report in the CFO inbox at 12:03 AM. Only 3 anomalies needed human review."}}, {"num": "04", "title": "The NDA", "sub": "A new deal needs an NDA. The partner wants it before end of day.", "roi": [{"v": "< 4 min", "l": "NDA drafted"}, {"v": "3 clauses", "l": "Flagged"}, {"v": "0 missed", "l": "Deadlines"}], "steps": [{"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask the chatbot for an NDA", "bal": {"who": "You", "cls": "user-balloon", "txt": "I need an NDA for the Apex Partners deal."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "You have to ask for the NDA.", "sub": "The deal was created an hour ago. Nothing happened automatically."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Generic template provided", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "\"THIS NON-DISCLOSURE AGREEMENT is entered into as of [DATE] between [PARTY A] and [PARTY B]...\"\n\nPlease fill in the parties, jurisdiction, and term. Have counsel review before sending."}, "tag": "tg-wait", "tagTxt": "Still your job", "ann": {"cls": "an-red", "a": "❌", "t": "A generic bracket-filled template. Fill it in yourself. Review it. Send it. Manually."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "Generic template. Still your work.", "sub": "Fill in the brackets. Get it reviewed. Route it. File it. Manually."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "Same deal. NDA drafted, flagged, and filed in 4 minutes.", "sub": "From your approved template. Automatically."}}, {"ph": "adj", "ico": "🔔", "ic": "adj-icon", "title": "New deal detected in CRM — Apex Partners", "body": "The moment the deal is created, the Adjutant detects the trigger and knows an NDA is required.", "tag": "tg-done", "tagTxt": "Auto-detected", "ann": {"cls": "an-gold", "a": "⚡", "t": "You did not ask. The deal created the task."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Deal detected. NDA triggered.", "sub": "CRM trigger. Automatic."}}, {"ph": "adj", "ico": "📄", "ic": "adj-icon", "title": "NDA generated from your approved template", "body": "Apex Partners details pulled from CRM. All standard terms populated. Your template — not a generic one.", "tag": "tg-done", "tagTxt": "Your template · Populated", "ann": {"cls": "an-green", "a": "✓", "t": "Your firm's standard terms. Your approved language."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "NDA generated. Your template.", "sub": "All parties populated from CRM."}}, {"ph": "adj", "ico": "🔍", "ic": "adj-icon", "title": "3 non-standard clauses flagged", "body": "Clause 8.2 Jurisdiction, Clause 11 Term, Clause 14 Remedies — all three deviate from your standard.", "tag": "tg-arm", "tagTxt": "3 clauses flagged", "ann": {"cls": "an-gold", "a": "⚡", "t": "Partner reviews 3 flagged items — not 52 pages."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 3", "main": "3 clauses flagged. Partner reviews these — not 52 pages.", "sub": "Specific. Contextual. Actionable."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Routed for partner review and filed", "body": "NDA and flagged clauses sent to the relevant partner with a 5pm deadline. Simultaneously filed to the matter.", "tag": "tg-sent", "tagTxt": "Routed and filed", "ann": {"cls": "an-green", "a": "✓", "t": "Right person. Right context. Right deadline."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "NDA drafted, flagged, filed. 4 minutes.", "sub": "Partner reviews 3 specific items. Not a blank template."}}], "cv": {"lbl": "Chatbot Result", "txt": "You received a generic template to fill in yourself. The work — and the risk — remains entirely with your team."}, "fv": {"lbl": "Adjutant Result", "txt": "NDA generated from your template, 3 clauses flagged, routed to the right partner, and filed — in under 4 minutes."}}, {"num": "05", "title": "The Calendar", "sub": "A meeting across three time zones. 4 busy people. 0 gaps.", "roi": [{"v": "3", "l": "Time zones"}, {"v": "0 conflicts", "l": "Scheduled"}, {"v": "0 emails", "l": "From you"}], "steps": [{"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask the chatbot to schedule the meeting", "bal": {"who": "You", "cls": "user-balloon", "txt": "Can you schedule a call with Harrington Legal in New York and our Singapore team?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "You ask. It explains time zones.", "sub": "Not what you asked for."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Chatbot explains the time difference — and stops", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "Time zone breakdown:\n• New York EST: UTC minus 5\n• Singapore SGT: UTC plus 8\n• 13-hour difference\n\nBest overlap: 8am EST = 9pm SGT.\n\nYou will need to check everyone's calendars and send the invite yourself."}, "tag": "tg-wait", "tagTxt": "Still your job", "ann": {"cls": "an-red", "a": "❌", "t": "Nothing is booked. 3 separate emails still required."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "Meeting not booked. Time zones explained.", "sub": "You still need to check 4 calendars, find a slot, and send invites."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "4 calendars scanned. Meeting booked. 3 minutes.", "sub": "Agenda sent. Reminders set. You sent zero emails."}}, {"ph": "adj", "ico": "🗓️", "ic": "adj-icon", "title": "4 calendars scanned simultaneously", "body": "All conflicts mapped across EST, GMT, and SGT in seconds.", "tag": "tg-done", "tagTxt": "All conflicts mapped", "ann": {"cls": "an-gold", "a": "⚡", "t": "No back-and-forth emails. The Adjutant already knows everyone's availability."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "4 calendars scanned. All conflicts mapped.", "sub": "EST · GMT · SGT. Simultaneously."}}, {"ph": "adj", "ico": "✅", "ic": "adj-icon", "title": "Optimal slot found", "body": "Thursday 8am EST, 1pm GMT, 9pm SGT — works for all four attendees.", "tag": "tg-done", "tagTxt": "Conflict-free slot", "ann": {"cls": "an-green", "a": "✓", "t": "Best time for all parties."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "Perfect slot found. Thu 8am EST.", "sub": "Works for all 4 attendees across 3 time zones."}}, {"ph": "adj", "ico": "📅", "ic": "adj-icon", "title": "Meeting booked — all confirmed", "body": "Invites sent and accepted by all four attendees.", "tag": "tg-done", "tagTxt": "All confirmed", "ann": {"cls": "an-green", "a": "✓", "t": "Done. No reply-all chains."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 3", "main": "Meeting booked. All confirmed.", "sub": "No scheduling emails. Just a booked meeting."}}, {"ph": "adj", "ico": "📋", "ic": "adj-icon", "title": "Agenda and reminders sent", "body": "Structured agenda sent to all. 24hr and 1hr reminders armed for all parties.", "tag": "tg-sent", "tagTxt": "Agenda sent · Reminders armed", "ann": {"cls": "an-green", "a": "✓", "t": "Attendees arrive prepared. Nobody forgets."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "Agenda sent. Reminders armed.", "sub": "Your team sent zero scheduling emails."}}], "cv": {"lbl": "Chatbot Result", "txt": "You received time zone information you could have Googled. The meeting is not booked. Three separate emails are still required."}, "fv": {"lbl": "Adjutant Result", "txt": "4 calendars scanned. Perfect slot found. Booked and confirmed by all. Agenda sent. Reminders armed. Zero scheduling emails from your team."}}, {"num": "06", "title": "Compliance Deadline", "sub": "A regulatory filing is 7 days away. Has anyone noticed?", "roi": [{"v": "$0", "l": "Penalty risk"}, {"v": "4 deadlines", "l": "Tracked"}, {"v": "100%", "l": "On time"}], "steps": [{"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask about upcoming deadlines", "bal": {"who": "You", "cls": "user-balloon", "txt": "When is our next regulatory filing deadline?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "You ask. It does not know.", "sub": "Most dangerous outcome in compliance."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Chatbot admits it has no access to your filings", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "I do not have access to your firm's filing calendar. You should:\n\n• Check your regulator's website\n• Review your compliance calendar\n• Set manual reminders\n\nShall I draft a compliance calendar template?"}, "tag": "tg-wait", "tagTxt": "No help given", "ann": {"cls": "an-red", "a": "⚠️", "t": "A missed filing deadline can mean fines, sanctions, or losing a licence. The chatbot told you to Google it."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "Told you to check the website yourself.", "sub": "7-day deadline. Nothing done. Risk: fines, sanctions, licence."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "47 matters audited. Deadline caught. Every Sunday night.", "sub": "Without being asked. Without fail."}}, {"ph": "adj", "ico": "📋", "ic": "adj-icon", "title": "47 active matters audited — every Sunday", "body": "The Adjutant reviews all active matters every Sunday at 11pm, cross-referencing every deadline in every jurisdiction.", "tag": "tg-done", "tagTxt": "Weekly audit", "ann": {"cls": "an-gold", "a": "⚡", "t": "Every week. Without fail. Nothing slips through."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "47 matters audited. Every Sunday night.", "sub": "Automatic. Every jurisdiction."}}, {"ph": "adj", "ico": "⚠️", "ic": "adj-icon", "title": "URGENT: Filing due in 7 days — caught", "body": "Matter 0291, Companies House, 15 April. Flagged immediately.", "tag": "tg-arm", "tagTxt": "7 days · Matter 0291", "ann": {"cls": "an-red", "a": "⚠️", "t": "Caught with time to act. Not the night before."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 2", "main": "URGENT: Filing in 7 days. Caught.", "sub": "Matter 0291. Companies House. 15 April."}}, {"ph": "adj", "ico": "🔔", "ic": "adj-icon", "title": "4-stage reminder cascade armed", "body": "30 day, 14 day, 7 day, 48 hour alerts. Across every matter, every jurisdiction.", "tag": "tg-done", "tagTxt": "All alerts armed", "ann": {"cls": "an-gold", "a": "⚡", "t": "You will never be surprised by a deadline again."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 3", "main": "Reminder cascade armed.", "sub": "30 day · 14 day · 7 day · 48hr. Every matter."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Compliance partner notified with full brief", "body": "Deadline, required action, and direct link to the filing portal.", "tag": "tg-sent", "tagTxt": "Brief sent", "ann": {"cls": "an-green", "a": "✓", "t": "Right person. Right context. Right link."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "Partner notified. No deadline missed. Ever.", "sub": "4 deadlines tracked. Full compliance across all 47 matters."}}], "cv": {"lbl": "Chatbot Result", "txt": "You received no useful information. The 7-day deadline is still approaching and nothing has been done."}, "fv": {"lbl": "Adjutant Result", "txt": "47 matters audited every Sunday night. Urgent deadline caught with 7 days to act. 4-stage reminder cascade armed. Compliance partner briefed. Zero risk of a missed filing."}}, {"num": "07", "title": "Prospect Follow-Up", "sub": "A warm lead has gone cold after 11 days of silence.", "roi": [{"v": "11 days", "l": "Cold lead"}, {"v": "3 emails", "l": "Auto-sent"}, {"v": "1 call", "l": "Booked"}], "steps": [{"ph": "chat", "ico": "💬", "ic": "chat-icon", "title": "Chatbot watched the lead go cold — and said nothing", "body": "Pemberton and Co had a great call 11 days ago. Silence since. The chatbot noticed nothing. Did nothing.", "tag": "tg-wait", "tagTxt": "11 days — no action", "ann": {"cls": "an-red", "a": "⚠️", "t": "Every day that passes, the probability of closing drops. Zero pipeline awareness."}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "11 days of silence. Chatbot: nothing.", "sub": "No alerts. No awareness. No follow-up."}}, {"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You finally notice and ask", "bal": {"who": "You", "cls": "user-balloon", "txt": "Pemberton and Co went quiet 11 days ago. Can you write a follow-up?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 2", "main": "You remember to check the pipeline.", "sub": "11 days late. The lead may already be gone."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Generic draft — still not sent", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "\"Hi [Name], Hope you are well. I am following up on our conversation from [date]...\"\n\nPlease personalise and send from your email client."}, "tag": "tg-wait", "tagTxt": "Still not sent", "ann": {"cls": "an-red", "a": "❌", "t": "11 days late. Generic. Needs personalising. Needs sending."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "11 days late. Draft not sent.", "sub": "Personalise it. Send it. If it is not too late."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "Same lead. Follow-up sent on day 11. Call booked day 14.", "sub": "Without anyone on your team noticing."}}, {"ph": "adj", "ico": "📊", "ic": "adj-icon", "title": "Pipeline monitored — threshold exceeded day 10", "body": "The Adjutant tracks every prospect. Pemberton passes 10 days without contact — flagged immediately.", "tag": "tg-arm", "tagTxt": "Flagged day 10", "ann": {"cls": "an-gold", "a": "⚡", "t": "You did not have to remember. The Adjutant is always watching."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Pipeline alert: Pemberton and Co.", "sub": "Day 10 threshold. Triggered automatically."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Follow-up 1 sent — day 11", "body": "Personalised to D. Pemberton by name, referencing the discovery call. From your domain.", "tag": "tg-sent", "tagTxt": "Personalised · Day 11", "ann": {"cls": "an-green", "a": "✓", "t": "Timely. Personal. Professional. Day 11."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "Follow-up sent. Day 11.", "sub": "Personalised. Timely. From your domain."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Follow-up 2 sent — day 13", "body": "Value-add email with relevant whitepaper attached.", "tag": "tg-sent", "tagTxt": "Value-add · Day 13", "ann": {"cls": "an-gold", "a": "⚡", "t": "Two-touch sequence, perfectly timed."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 3", "main": "Follow-up 2. Day 13.", "sub": "Whitepaper attached. Two-touch sequence."}}, {"ph": "adj", "ico": "📩", "ic": "adj-icon", "title": "Pemberton replies — day 14", "bal": {"who": "D. Pemberton", "cls": "user-balloon", "txt": "\"Hi — sorry for the delay. Yes, let us move forward. When can we talk?\""}, "tag": "tg-done", "tagTxt": "Reply · Day 14", "ann": {"cls": "an-green", "a": "✓", "t": "The sequence worked."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 4", "main": "Reply received. Day 14.", "sub": "Adjutant acts immediately."}}, {"ph": "adj", "ico": "📅", "ic": "adj-icon", "title": "Discovery call booked automatically", "body": "Adjutant detects the positive reply and books Tuesday 2pm.", "tag": "tg-done", "tagTxt": "Tue 2pm · Confirmed", "ann": {"cls": "an-green", "a": "✓", "t": "Cold lead to booked call — without your team knowing it had gone quiet."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "Call booked. Nobody knew it had gone cold.", "sub": "Cold lead to booked call. Zero human involvement."}}], "cv": {"lbl": "Chatbot Result", "txt": "You remembered to check the pipeline on day 11. Generic draft produced. Still needs personalising and sending."}, "fv": {"lbl": "Adjutant Result", "txt": "Sequence triggered at day 11. Two personalised follow-ups sent. Reply on day 14. Discovery call booked automatically. Your team never knew the lead had gone cold."}}, {"num": "08", "title": "The Weekly Report", "sub": "Leadership needs the performance report. It is Friday at 4pm.", "roi": [{"v": "3 hrs", "l": "Saved weekly"}, {"v": "52 reports", "l": "Per year"}, {"v": "0 delays", "l": "Ever"}], "steps": [{"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask the chatbot to help", "bal": {"who": "You", "cls": "user-balloon", "txt": "Can you put together the weekly report for leadership?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "You ask for the report. It asks for the data.", "sub": "You have to do the hard part first."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Chatbot asks you to do all the data gathering first", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "Happy to help! I will need you to:\n\n1. Paste in this week's billing data\n2. Copy your pipeline figures\n3. Share client updates\n4. Provide headcount numbers\n\nOnce you send those, I can format the report."}, "tag": "tg-wait", "tagTxt": "Waiting for your data", "ann": {"cls": "an-red", "a": "❌", "t": "The chatbot can format data — but only after you have pulled it from 7 different systems. That is the hard part."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "Paste the data in first.", "sub": "7 systems. You pull it. It formats it. 3 hours either way."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "7 data sources. Report delivered. Friday 4:05 PM.", "sub": "Every week. Same time. Without fail."}}, {"ph": "adj", "ico": "🔄", "ic": "adj-icon", "title": "Data pull initiated — Friday 4:00 PM", "body": "Every Friday at 4pm, the Adjutant automatically pulls live data from all connected systems.", "tag": "tg-done", "tagTxt": "7 systems · Auto-initiated", "ann": {"cls": "an-gold", "a": "⚡", "t": "Every Friday. 4pm. No reminders needed."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Data pull. 4:00 PM. Automatic.", "sub": "7 systems. Billing. Pipeline. Headcount. All of it."}}, {"ph": "adj", "ico": "📊", "ic": "adj-icon", "title": "Report compiled in 3 minutes", "body": "All data merged and formatted to your board report template.", "tag": "tg-done", "tagTxt": "Compiled · 4:03 PM", "ann": {"cls": "an-green", "a": "✓", "t": "What takes your team 3 hours takes the Adjutant 3 minutes."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "Report compiled. 4:03 PM.", "sub": "3 minutes vs 3 hours."}}, {"ph": "adj", "ico": "📈", "ic": "adj-icon", "title": "Variance analysis generated", "body": "Week-on-week and target-vs-actual. Significant variances highlighted with commentary.", "tag": "tg-done", "tagTxt": "Analysed", "ann": {"cls": "an-gold", "a": "⚡", "t": "Leadership sees what has changed and why."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 3", "main": "Variance analysis. Automatic.", "sub": "What changed. What is off target. Commentary included."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Delivered to leadership — 4:05 PM", "body": "Managing Partner, CFO, and COO. Every Friday. Without exception.", "tag": "tg-sent", "tagTxt": "Sent · 4:05 PM", "ann": {"cls": "an-green", "a": "✓", "t": "Leadership has the report before they leave for the weekend. Every week."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "4:05 PM. In their inbox. Every Friday.", "sub": "52 reports. 156 hours saved. Automatically."}}], "cv": {"lbl": "Chatbot Result", "txt": "You have to pull data from 7 systems before the chatbot can help. The report still takes 3 hours to produce."}, "fv": {"lbl": "Adjutant Result", "txt": "7 sources pulled. Report compiled, analysed, and delivered to leadership in 5 minutes. Every Friday at 4:05 PM. 156 hours of staff time saved per year."}}, {"num": "09", "title": "New Hire Onboarding", "sub": "A new associate starts Monday. 23 tasks need completing.", "roi": [{"v": "23 tasks", "l": "Automated"}, {"v": "Day 1", "l": "Fully ready"}, {"v": "0 errors", "l": "In process"}], "steps": [{"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You ask for an onboarding checklist", "bal": {"who": "You", "cls": "user-balloon", "txt": "New associate starting Monday. Can you create an onboarding checklist?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "You ask for a checklist. It gives you one.", "sub": "23 tasks. Still all yours to do."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Checklist produced — nothing actioned", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "Standard onboarding checklist:\n\n• Send offer letter\n• Provision IT accounts\n• Order equipment\n• Schedule inductions\n• Set up payroll\n\nYou will need to action each of these manually with the relevant teams."}, "tag": "tg-wait", "tagTxt": "23 tasks still to do", "ann": {"cls": "an-red", "a": "❌", "t": "23 tasks to coordinate manually with HR, IT, Payroll, and Facilities. Expect 2-3 days of back-and-forth."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "A list you already knew. Nothing done.", "sub": "23 tasks. HR. IT. Payroll. Facilities. All manual."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "23 tasks. All done. Thursday morning.", "sub": "Associate arrives Monday to a fully ready desk."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "Offer letter sent via DocuSign", "body": "J. Martinez, start date confirmed, counter-signed copy filed.", "tag": "tg-sent", "tagTxt": "Sent · DocuSign", "ann": {"cls": "an-gold", "a": "⚡", "t": "No HR chasing. Offer out the moment the decision was made."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "Offer letter sent. DocuSign.", "sub": "Automatically. Counter-signed copy filed."}}, {"ph": "adj", "ico": "💻", "ic": "adj-icon", "title": "IT accounts provisioned", "body": "Email, Slack, practice management, document management — all ready.", "tag": "tg-done", "tagTxt": "All systems ready", "ann": {"cls": "an-green", "a": "✓", "t": "No IT has not set up the account on Monday morning."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "IT accounts provisioned.", "sub": "Email. Slack. Practice management. All active."}}, {"ph": "adj", "ico": "📦", "ic": "adj-icon", "title": "Equipment ordered — arrives Friday", "body": "MacBook, headset, access card — all procurement done.", "tag": "tg-done", "tagTxt": "Arrives Friday", "ann": {"cls": "an-gold", "a": "⚡", "t": "No the laptop is still being set up on Day 1."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 3", "main": "Equipment ordered. Arrives Friday.", "sub": "Ready before the weekend."}}, {"ph": "adj", "ico": "📅", "ic": "adj-icon", "title": "Week 1 schedule built", "body": "Induction meetings booked, buddy assigned, first week calendar populated.", "tag": "tg-done", "tagTxt": "Full week scheduled", "ann": {"cls": "an-green", "a": "✓", "t": "Associate arrives knowing exactly where to be and who to meet."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 4", "main": "Week 1 fully scheduled.", "sub": "Inductions. Partner intro. Buddy assigned."}}, {"ph": "adj", "ico": "✅", "ic": "adj-icon", "title": "All 23 tasks complete — Thursday 9:04 AM", "body": "J. Martinez is fully set up before the weekend.", "tag": "tg-done", "tagTxt": "23 of 23 complete", "ann": {"cls": "an-green", "a": "✓", "t": "4 minutes of Adjutant time. Zero coordination from your team."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "23 tasks. Done by Thursday.", "sub": "Associate arrives Monday to a working desk and a full schedule."}}], "cv": {"lbl": "Chatbot Result", "txt": "23 tasks still need to be manually coordinated across HR, IT, Payroll, and Facilities. Expect 2 to 3 days of chasing."}, "fv": {"lbl": "Adjutant Result", "txt": "All 23 onboarding tasks completed Thursday morning. Associate arrives Monday to a working laptop, active accounts, and a full week-one schedule."}}, {"num": "10", "title": "The Sick Day", "sub": "Your office manager calls in sick. 34 tasks are waiting. It is 8am Monday.", "roi": [{"v": "34 tasks", "l": "Still done"}, {"v": "0 delays", "l": "To clients"}, {"v": "8:30 AM", "l": "All complete"}], "steps": [{"ph": "chat", "ico": "👤", "ic": "chat-icon", "title": "You tell the chatbot Sarah is sick", "bal": {"who": "You", "cls": "user-balloon", "txt": "Sarah just called in sick. Can you cover her tasks today?"}, "cap": {"badge": "red", "lbl": "Chatbot · Step 1", "main": "Sarah is sick. You tell the chatbot.", "sub": "It needs you to list her tasks first."}}, {"ph": "chat", "ico": "🤖", "ic": "chat-icon", "title": "Chatbot asks you to reconstruct Sarah's day", "bal": {"who": "AI Chatbot", "cls": "bot-balloon", "txt": "I can help. Could you tell me:\n\n• What tasks were due today?\n• What meetings need managing?\n• What client comms were pending?\n\nOnce you share those, I can draft a plan."}, "tag": "tg-wait", "tagTxt": "Waiting for your input", "ann": {"cls": "an-red", "a": "❌", "t": "You now have to reconstruct Sarah's entire day from memory — on top of your own work."}, "cap": {"badge": "red", "lbl": "Chatbot · Verdict", "main": "You are now doing Sarah's job AND managing the chatbot.", "sub": "List her tasks. Then it can help. 34 tasks outstanding."}}, {"ph": "transition", "cap": {"badge": "gold", "lbl": "Now — watch the Adjutant", "main": "34 tasks. Done by 8:30 AM.", "sub": "Clients never knew. Your team never scrambled."}}, {"ph": "adj", "ico": "📅", "ic": "adj-icon", "title": "3 meetings rescheduled — 8:01 AM", "body": "Conflicts resolved. All parties notified. Nobody knows Sarah is out.", "tag": "tg-done", "tagTxt": "All parties notified", "ann": {"cls": "an-gold", "a": "⚡", "t": "Clients never knew Sarah was out."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 1", "main": "3 meetings rescheduled. 8:01 AM.", "sub": "All parties notified. Invisible to clients."}}, {"ph": "adj", "ico": "📧", "ic": "adj-icon", "title": "14 client emails processed — 8:03 AM", "body": "Routine queries replied to, urgent items escalated, others routed correctly.", "tag": "tg-sent", "tagTxt": "All triaged", "ann": {"cls": "an-green", "a": "✓", "t": "Clients received responses before most offices opened."}, "cap": {"badge": "green", "lbl": "Adjutant · Step 2", "main": "14 client emails handled. 8:03 AM.", "sub": "Replied. Escalated. Routed."}}, {"ph": "adj", "ico": "📋", "ic": "adj-icon", "title": "11 admin tasks completed — 8:15 AM", "body": "Filing, data entry, invoice processing, document routing — all done.", "tag": "tg-done", "tagTxt": "All complete", "ann": {"cls": "an-gold", "a": "⚡", "t": "Tasks that would have piled up all day — cleared by 8:15 AM."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 3", "main": "11 admin tasks. Done by 8:15.", "sub": "Filing. Data entry. Invoices. All cleared."}}, {"ph": "adj", "ico": "🔔", "ic": "adj-icon", "title": "2 items escalated to you — 8:16 AM", "body": "A complex client query and a contract requiring your sign-off. Only these reach your desk.", "tag": "tg-arm", "tagTxt": "2 items for you", "ann": {"cls": "an-gold", "a": "⚡", "t": "32 tasks handled without you. Only 2 that need genuine human judgement reached you."}, "cap": {"badge": "gold", "lbl": "Adjutant · Step 4", "main": "Only 2 items reach your desk.", "sub": "Everything else handled."}}, {"ph": "adj", "ico": "✅", "ic": "adj-icon", "title": "34 of 34 tasks complete — 8:30 AM", "body": "Monday running normally. No client impact. No backlog. No overtime.", "tag": "tg-done", "tagTxt": "Monday fully covered", "ann": {"cls": "an-green", "a": "✓", "t": "Your clients never knew. Sarah can rest."}, "cap": {"badge": "green", "lbl": "Adjutant · Complete", "main": "34 tasks. Done by 8:30. Clients unaffected.", "sub": "Sarah's absence was invisible to the outside world."}}], "cv": {"lbl": "Chatbot Result", "txt": "You are now doing Sarah's job and managing the chatbot. 34 tasks are still outstanding. Clients are waiting."}, "fv": {"lbl": "Adjutant Result", "txt": "34 tasks handled by 8:30 AM. Clients unaffected. Only the 2 items that genuinely needed human judgement reached you."}}]
+</script>
+<script>
+
+(function() {
+var S = JSON.parse(document.getElementById('sdata').textContent);
+
+var cur=0, stepIdx=-1, paused=false, stepTimer=null, capMode='bottom';
+var STEP_MS = 2400;
+
+document.getElementById('startBtn').addEventListener('click', launchApp);
+document.getElementById('impBtn').addEventListener('click', function(){ window.open('https://eproxim.com','_blank'); });
+document.getElementById('capToggleBtn').addEventListener('click', toggleCapMode);
+document.getElementById('prevSceneBtn').addEventListener('click', prevScene);
+document.getElementById('stepBackBtn').addEventListener('click', stepBack);
+document.getElementById('pauseBtn').addEventListener('click', togglePause);
+document.getElementById('stepFwdBtn').addEventListener('click', stepForward);
+document.getElementById('nextSceneBtn').addEventListener('click', nextScene);
+
+function launchApp() {
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  buildNav(); buildScenes(); loadScene(0);
+}
+
+function buildNav() {
+  var w = document.getElementById('gnavDots');
+  S.forEach(function(s,i) {
+    var d = document.createElement('div');
+    d.className = 'gdot'; d.id = 'gd'+i; d.title = s.title;
+    d.addEventListener('click', (function(idx){ return function(){ jumpTo(idx); }; })(i));
+    w.appendChild(d);
+  });
+}
+
+function buildScenes() {
+  var w = document.getElementById('scenariosWrap');
+  S.forEach(function(s,i) {
+    var el = document.createElement('div');
+    el.className = 'scenario'; el.id = 'sc'+i;
+
+    var hdr = document.createElement('div'); hdr.className = 'shdr';
+    var snum = document.createElement('div'); snum.className = 'snum';
+    snum.textContent = 'Scenario '+s.num+' of 10 · '+s.title;
+    var stitle = document.createElement('h2'); stitle.className = 'stitle'; stitle.textContent = s.title;
+    var ssub = document.createElement('p'); ssub.className = 'ssub'; ssub.textContent = s.sub;
+    var roi = document.createElement('div'); roi.className = 'roi-ribbon';
+    s.roi.forEach(function(r) {
+      var ri = document.createElement('div'); ri.className = 'roi-item';
+      var rv = document.createElement('span'); rv.className = 'roi-v'; rv.textContent = r.v;
+      var rl = document.createElement('span'); rl.className = 'roi-l'; rl.textContent = r.l;
+      ri.appendChild(rv); ri.appendChild(rl); roi.appendChild(ri);
+    });
+    hdr.appendChild(snum); hdr.appendChild(stitle); hdr.appendChild(ssub); hdr.appendChild(roi);
+    el.appendChild(hdr);
+
+    var story = document.createElement('div'); story.className = 'story';
+
+    var chdr = document.createElement('div'); chdr.className = 'phase-hdr chat-hdr';
+    chdr.innerHTML = '<div class="phdr-dot">\x3C/div><div class="phdr-title">AI Chatbot\x3C/div><div class="phdr-tag">Waits to be asked\x3C/div>';
+    story.appendChild(chdr);
+
+    var csteps = document.createElement('div'); csteps.className = 'steps chat-steps'; csteps.id = 'cs'+i;
+    story.appendChild(csteps);
+
+    var cv = document.createElement('div'); cv.className = 'verdict-banner bad'; cv.id = 'cv'+i;
+    var cvl = document.createElement('div'); cvl.className = 'vb-label'; cvl.textContent = '❌ '+s.cv.lbl;
+    var cvt = document.createElement('div'); cvt.className = 'vb-text'; cvt.textContent = s.cv.txt;
+    cv.appendChild(cvl); cv.appendChild(cvt); story.appendChild(cv);
+
+    var tb = document.createElement('div'); tb.className = 'transition-block'; tb.id = 'tb'+i;
+    tb.innerHTML = '<div class="tb-line">\x3C/div><div class="tb-arrow">▼\x3C/div><div class="tb-label">Now watch the <em>Adjutant\x3C/em>\x3C/div><div class="tb-sub">Same situation. Different outcome.\x3C/div>';
+    story.appendChild(tb);
+
+    var ahdr = document.createElement('div'); ahdr.className = 'phase-hdr adj-hdr'; ahdr.id = 'ah'+i;
+    ahdr.style.display = 'none'; ahdr.style.marginTop = '0';
+    ahdr.innerHTML = '<div class="phdr-dot">\x3C/div><div class="phdr-title">Adjutant\x3C/div><div class="phdr-tag">Already on it\x3C/div>';
+    story.appendChild(ahdr);
+
+    var asteps = document.createElement('div'); asteps.className = 'steps adj-steps'; asteps.id = 'as'+i;
+    asteps.style.display = 'none'; story.appendChild(asteps);
+
+    var fv = document.createElement('div'); fv.className = 'verdict-banner good'; fv.id = 'fv'+i;
+    var fvl = document.createElement('div'); fvl.className = 'vb-label'; fvl.textContent = '✓ '+s.fv.lbl;
+    var fvt = document.createElement('div'); fvt.className = 'vb-text'; fvt.textContent = s.fv.txt;
+    fv.appendChild(fvl); fv.appendChild(fvt); story.appendChild(fv);
+
+    el.appendChild(story);
+    w.appendChild(el);
+  });
+}
+
+function loadScene(idx) {
+  document.querySelectorAll('.scenario').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('impactScreen').style.display = 'none';
+  clearTimer();
+  if(idx >= S.length){ showImpact(); return; }
+  cur=idx; stepIdx=-1; paused=false;
+  document.getElementById('pauseBtn').textContent = '⏸';
+  document.getElementById('sc'+idx).classList.add('active');
+  resetContent(idx);
+  updateNavDots(idx);
+  updateCtrlInfo();
+  buildStepDots(idx);
+  updateSceneProg(idx);
+  scheduleNext();
+}
+
+function resetContent(idx) {
+  document.getElementById('cs'+idx).innerHTML = '';
+  var as = document.getElementById('as'+idx); as.innerHTML = ''; as.style.display = 'none';
+  document.getElementById('ah'+idx).style.display = 'none';
+  document.getElementById('cv'+idx).classList.remove('show');
+  document.getElementById('fv'+idx).classList.remove('show');
+  var tb = document.getElementById('tb'+idx); tb.classList.remove('show'); tb.style.display = 'none';
+  hideCap();
+}
+
+function scheduleNext() {
+  if(paused) return;
+  clearTimer();
+  stepTimer = setTimeout(advance, stepIdx < 0 ? 800 : STEP_MS);
+}
+
+function advance() {
+  var s = S[cur];
+  var ni = stepIdx + 1;
+  if(ni >= s.steps.length) {
+    document.getElementById('fv'+cur).classList.add('show');
+    updateStepDots();
+    showCap({badge:'green', lbl:'Scenario Complete', main:'Auto-advancing to next scenario...', sub:'Or press Next to skip ahead.'});
+    if(!paused) stepTimer = setTimeout(nextScene, 4500);
+    return;
+  }
+  stepIdx = ni;
+  renderStep(cur, stepIdx);
+  updateStepDots();
+  showCap(S[cur].steps[stepIdx].cap);
+  updateCtrlInfo();
+  scheduleNext();
+}
+
+function renderStep(si, idx) {
+  var step = S[si].steps[idx];
+  if(step.ph === 'transition') {
+    var tb = document.getElementById('tb'+si);
+    tb.style.display = 'flex';
+    setTimeout(function(){ tb.classList.add('show'); }, 50);
+    document.getElementById('cv'+si).classList.add('show');
+    setTimeout(function(){
+      document.getElementById('ah'+si).style.display = 'flex';
+      var as = document.getElementById('as'+si); as.style.display = 'flex'; as.style.flexDirection = 'column';
+    }, 600);
+    scrollDown(); return;
+  }
+
+  var cont = document.getElementById(step.ph==='chat' ? 'cs'+si : 'as'+si);
+  if(!cont) return;
+  var lc = step.ph==='chat' ? 'rgba(232,72,72,.18)' : 'rgba(232,160,32,.18)';
+
+  var el = document.createElement('div'); el.className = 'step';
+  var left = document.createElement('div'); left.className = 'step-left';
+  var ico = document.createElement('div'); ico.className = 'step-icon '+step.ic; ico.textContent = step.ico;
+  var line = document.createElement('div'); line.className = 'step-line'; line.style.background = lc;
+  left.appendChild(ico); left.appendChild(line);
+
+  var right = document.createElement('div'); right.className = 'step-right';
+  var title = document.createElement('div'); title.className = 'step-title'; title.textContent = step.title;
+  right.appendChild(title);
+
+  if(step.bal) {
+    var bal = document.createElement('div'); bal.className = 'balloon '+step.bal.cls;
+    var who = document.createElement('span'); who.className = 'who'; who.textContent = step.bal.who;
+    bal.appendChild(who);
+    step.bal.txt.split('\n').forEach(function(line, i) {
+      if(i > 0) bal.appendChild(document.createElement('br'));
+      bal.appendChild(document.createTextNode(line));
+    });
+    right.appendChild(bal);
+  }
+
+  if(step.body) {
+    var body = document.createElement('div'); body.className = 'step-body'; body.textContent = step.body;
+    right.appendChild(body);
+  }
+
+  if(step.tag) {
+    var tag = document.createElement('span'); tag.className = 'step-tag '+step.tag; tag.textContent = step.tagTxt;
+    right.appendChild(tag);
+  }
+
+  if(step.ann) {
+    var ann = document.createElement('div'); ann.className = 'annotation '+step.ann.cls;
+    var aa = document.createElement('div'); aa.className = 'aa'; aa.textContent = step.ann.a;
+    var at = document.createElement('div'); at.textContent = step.ann.t;
+    ann.appendChild(aa); ann.appendChild(at);
+    right.appendChild(ann);
+  }
+
+  el.appendChild(left); el.appendChild(right);
+  cont.appendChild(el);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('show'); }); });
+  scrollDown();
+}
+
+function scrollDown() { setTimeout(function(){ window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}); }, 120); }
+
+function showCap(c) {
+  if(!c){ hideCap(); return; }
+  var bubble = document.getElementById('capBubble');
+  var badge = document.getElementById('capBadge');
+  var bc = c.badge === 'red' ? 'red' : c.badge === 'green' ? 'green' : 'gold';
+  badge.className = 'cap-phase-badge '+bc;
+  badge.textContent = c.badge==='red' ? 'Chatbot' : c.badge==='green' ? 'Done' : 'Adjutant';
+  document.getElementById('capStepLabel').textContent = c.lbl || '';
+  document.getElementById('capMain').textContent = c.main || '';
+  document.getElementById('capSub').textContent = c.sub || '';
+  bubble.classList.add('show');
+  if(S[cur]) {
+    var pct = ((stepIdx+1)/S[cur].steps.length)*100;
+    document.getElementById('stepProgFill').style.width = pct+'%';
+  }
+}
+
+function hideCap() { document.getElementById('capBubble').classList.remove('show'); }
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? '►' : '⏸';
+  updateCtrlInfo();
+  if(!paused) scheduleNext(); else clearTimer();
+}
+
+function stepForward() {
+  clearTimer(); paused=true;
+  document.getElementById('pauseBtn').textContent = '►';
+  advance();
+}
+
+function stepBack() {
+  if(stepIdx <= 0){ loadScene(cur); return; }
+  clearTimer(); paused=true;
+  document.getElementById('pauseBtn').textContent = '►';
+  var target = stepIdx - 1;
+  resetContent(cur); stepIdx = -1;
+  for(var i=0; i<=target; i++){ stepIdx=i; renderStep(cur,i); }
+  updateStepDots();
+  showCap(S[cur].steps[stepIdx].cap);
+  updateCtrlInfo();
+}
+
+function nextScene() { clearTimer(); loadScene(cur+1); }
+function prevScene() { clearTimer(); if(cur>0) loadScene(cur-1); else loadScene(0); }
+function jumpTo(idx) { clearTimer(); loadScene(idx); }
+function clearTimer() { if(stepTimer){ clearTimeout(stepTimer); stepTimer=null; } }
+
+function updateNavDots(idx) {
+  document.querySelectorAll('.gdot').forEach(function(d,i){
+    d.classList.remove('active','done');
+    if(i===idx) d.classList.add('active');
+    else if(i<idx) d.classList.add('done');
+  });
+  document.getElementById('gnavCtr').textContent = (idx+1)+' / 10';
+}
+
+function updateSceneProg(idx) {
+  document.getElementById('spfill').style.width = ((idx/S.length)*100)+'%';
+}
+
+function updateCtrlInfo() {
+  var s = S[cur];
+  document.getElementById('ctrlTitle').textContent = s ? s.title : 'Complete';
+  document.getElementById('ctrlSub').textContent = 'Scenario '+(cur+1)+' of 10'+(paused?' · Paused':'');
+}
+
+function buildStepDots(idx) {
+  var w = document.getElementById('stepDots'); w.innerHTML = '';
+  if(!S[idx]) return;
+  S[idx].steps.forEach(function(_,i){
+    var d = document.createElement('div'); d.className = 'sdot'; d.id = 'sd'+idx+'-'+i; w.appendChild(d);
+  });
+}
+
+function updateStepDots() {
+  if(!S[cur]) return;
+  S[cur].steps.forEach(function(step,i){
+    var d = document.getElementById('sd'+cur+'-'+i); if(!d) return;
+    d.classList.remove('active','done-chat','done-adj');
+    if(i===stepIdx) d.classList.add('active');
+    else if(i<stepIdx) d.classList.add(step.ph==='chat'?'done-chat':'done-adj');
+  });
+}
+
+function toggleCapMode() {
+  capMode = capMode==='bottom' ? 'right' : 'bottom';
+  var btn = document.getElementById('capToggleBtn');
+  if(capMode==='right'){
+    document.body.classList.add('cap-right');
+    btn.textContent = '➡ Right';
+    btn.style.color='var(--gold)';
+    btn.style.borderColor='rgba(232,160,32,.4)';
+  } else {
+    document.body.classList.remove('cap-right');
+    btn.textContent = '⬇ Bottom';
+    btn.style.color='';
+    btn.style.borderColor='';
+  }
+}
+
+function showImpact() {
+  clearTimer();
+  document.querySelectorAll('.scenario').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('impactScreen').style.display = 'flex';
+  document.getElementById('spfill').style.width = '100%';
+  document.getElementById('stepProgFill').style.width = '100%';
+  document.getElementById('gnavCtr').textContent = 'Verdict';
+  document.getElementById('ctrlTitle').textContent = 'The Adjutant Verdict';
+  document.getElementById('ctrlSub').textContent = 'All 10 scenarios complete';
+  document.querySelectorAll('.gdot').forEach(function(d){ d.classList.add('done'); });
+  document.getElementById('stepDots').innerHTML = '';
+  showCap({badge:'green', lbl:'Final Score', main:'47 Adjutant actions. 0 Chatbot actions.', sub:'10 scenarios. Every week. Without being asked.'});
+  var nb = document.getElementById('nextSceneBtn');
+  nb.textContent = '↺ Start Over';
+  nb.removeEventListener('click', nextScene);
+  nb.addEventListener('click', function restart(){
+    nb.textContent = 'Next ►►';
+    nb.removeEventListener('click', restart);
+    nb.addEventListener('click', nextScene);
+    cur=0; loadScene(0);
+  });
+}
+
+})();
+
+</script>
+</body>
+</html>
