@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ssh proxmox:*)",
+      "Bash(ssh -o * proxmox:*)",
+      "Bash(scp:*)",
+      "Bash(rsync:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(ssh-keyscan:*)"
+    ]
+  }
+}
