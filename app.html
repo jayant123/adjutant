@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0E1014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Adjutant">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>eProxim Adjutant — Live</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0E1014;--card:#1A1D24;--card2:#22262F;--gold:#E8A020;--gold2:#F5B83A;
+  --golddim:rgba(232,160,32,0.10);--bordergold:rgba(232,160,32,0.22);
+  --red:#E84848;--reddim:rgba(232,72,72,0.10);--redborder:rgba(232,72,72,0.25);
+  --green:#22D47E;--greendim:rgba(34,212,126,0.10);--greenborder:rgba(34,212,126,0.25);
+  --blue:#4A9EFF;--bluedim:rgba(74,158,255,0.10);--blueborder:rgba(74,158,255,0.25);
+  --white:#F2EFE9;--off:#B0B8C8;--muted:#5A6272;--border:rgba(255,255,255,0.07);
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:var(--bg);color:var(--white);
+  font-family:'DM Sans',sans-serif;font-weight:300;
+  min-height:100vh;overflow-x:hidden;
+  padding-top:var(--safe-top);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* === SPLASH === */
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:40px 28px;text-align:center;transition:opacity .5s ease;}
+#splash.hide{opacity:0;pointer-events:none;}
+.sp-pre{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:18px;animation:fadeUp .7s both;}
+.sp-h1{font-family:'Playfair Display',serif;font-size:clamp(34px,8vw,52px);font-weight:900;line-height:1.0;margin-bottom:14px;animation:fadeUp .7s .1s both;}
+.sp-h1 em{color:var(--gold);font-style:italic;}
+.sp-p{font-size:15px;color:var(--off);max-width:340px;line-height:1.65;margin-bottom:30px;animation:fadeUp .7s .2s both;}
+.sp-conn{display:flex;flex-direction:column;gap:8px;margin-bottom:34px;width:100%;max-width:300px;animation:fadeUp .7s .3s both;}
+.sp-conn-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:9px;font-size:13px;}
+.sp-conn-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex-shrink:0;}
+.sp-conn-name{flex:1;text-align:left;font-weight:500;}
+.sp-conn-status{font-family:'DM Mono',monospace;font-size:9px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;}
+.sp-btn{background:var(--gold);color:#0C0E12;border:none;border-radius:9px;padding:16px 44px;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .2s;box-shadow:0 8px 32px rgba(232,160,32,.35);animation:fadeUp .7s .4s both;}
+.sp-btn:active{transform:scale(.97);background:var(--gold2);}
+.sp-foot{margin-top:24px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;animation:fadeUp .7s .5s both;}
+
+/* === APP SHELL === */
+#app{display:none;flex-direction:column;min-height:100vh;}
+#app.live{display:flex;}
+
+/* TOP BAR */
+.tbar{position:sticky;top:0;background:rgba(14,16,20,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--border);z-index:50;padding:11px 18px;display:flex;align-items:center;gap:12px;}
+.tbar-brand{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;}
+.tbar-brand em{color:var(--gold);font-style:italic;}
+.tbar-sp{flex:1;}
+.tbar-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.tbar-live{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;color:var(--green);letter-spacing:.14em;text-transform:uppercase;}
+.tbar-live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+
+/* INTEGRATION STRIP */
+.intg{display:flex;gap:8px;padding:14px 18px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.intg::-webkit-scrollbar{display:none;}
+.intg-chip{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:8px 13px;background:var(--card);border:1px solid var(--border);border-radius:999px;font-size:12px;font-weight:500;}
+.intg-chip .ic{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;}
+.intg-chip .ghl-ic{background:#7B5FFF;color:#fff;}
+.intg-chip .qb-ic{background:#2CA01C;color:#fff;}
+.intg-chip .dx-ic{background:#0061FF;color:#fff;}
+.intg-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+
+/* HERO */
+.hero{padding:18px 22px 8px;}
+.hero-greet{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.hero-h{font-family:'Playfair Display',serif;font-size:clamp(26px,6.5vw,34px);font-weight:900;line-height:1.05;margin-bottom:8px;}
+.hero-h em{color:var(--gold);font-style:italic;}
+.hero-sub{font-size:13.5px;color:var(--off);line-height:1.6;}
+
+/* STAT TILES */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 18px 4px;}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 11px;text-align:center;position:relative;overflow:hidden;}
+.tile.gold{border-color:var(--bordergold);background:linear-gradient(180deg,var(--golddim) 0%,var(--card) 90%);}
+.tile-v{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--gold);display:block;line-height:1;margin-bottom:4px;}
+.tile-l{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;line-height:1.3;}
+
+/* SECTION HEADER */
+.shdr{display:flex;align-items:baseline;justify-content:space-between;padding:24px 22px 10px;}
+.shdr-t{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;color:var(--off);text-transform:uppercase;}
+.shdr-c{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.1em;}
+
+/* ACTIVITY FEED */
+.feed{padding:0 18px 140px;display:flex;flex-direction:column;gap:10px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 14px 12px;position:relative;cursor:pointer;transition:transform .15s ease,border-color .2s ease;}
+.card:active{transform:scale(.99);}
+.card.fresh{border-color:var(--bordergold);box-shadow:0 0 0 1px var(--bordergold),0 8px 28px rgba(232,160,32,.12);}
+.card.fresh::before{content:'';position:absolute;top:-1px;left:14px;right:14px;height:2px;background:var(--gold);border-radius:0 0 2px 2px;}
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.card-icon{width:34px;height:34px;border-radius:50%;background:var(--golddim);border:1px solid var(--bordergold);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.card-meta{flex:1;min-width:0;}
+.card-title{font-size:14px;font-weight:500;color:var(--white);line-height:1.3;margin-bottom:2px;}
+.card-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.06em;}
+.card-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.06em;flex-shrink:0;}
+.card-body{font-size:13px;color:var(--off);line-height:1.55;margin-bottom:10px;}
+.card-body b{color:var(--white);font-weight:500;}
+.card-chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.chain-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;background:var(--card2);border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;color:var(--off);text-transform:uppercase;}
+.chain-pill .icx{width:12px;height:12px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;}
+.chain-pill .ghl-ic{background:#7B5FFF;}.chain-pill .qb-ic{background:#2CA01C;}.chain-pill .dx-ic{background:#0061FF;}
+.chain-arrow{color:var(--muted);font-size:9px;}
+.card-roi{display:inline-block;margin-left:auto;margin-top:8px;padding:3px 8px;background:var(--greendim);color:var(--green);border:1px solid var(--greenborder);border-radius:5px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+
+/* STICKY BOTTOM BAR */
+.bbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(14,16,20,0) 0%,rgba(14,16,20,.96) 28%,var(--bg) 100%);padding:16px 18px calc(18px + var(--safe-bot));display:flex;gap:9px;z-index:60;}
+.bbar-btn{flex:1;background:var(--gold);color:#0C0E12;border:none;border-radius:10px;padding:15px 16px;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .15s;box-shadow:0 6px 24px rgba(232,160,32,.32);}
+.bbar-btn:active{transform:scale(.98);background:var(--gold2);}
+.bbar-btn:disabled{background:var(--card);color:var(--muted);box-shadow:none;cursor:default;}
+.bbar-btn.ghost{flex:0 0 auto;background:transparent;color:var(--off);border:1px solid var(--border);box-shadow:none;padding:15px 18px;}
+.bbar-btn.ghost:active{background:var(--card);}
+
+/* SHEET */
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:90;}
+.sheet-back.show{opacity:1;pointer-events:auto;}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-radius:18px 18px 0 0;border-top:1px solid var(--border);max-height:88vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:100;padding-bottom:calc(28px + var(--safe-bot));}
+.sheet.show{transform:translateY(0);}
+.sheet-grip{width:42px;height:4px;border-radius:3px;background:var(--muted);margin:10px auto 6px;opacity:.5;}
+.sheet-hd{padding:8px 22px 16px;border-bottom:1px solid var(--border);}
+.sheet-pre{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+.sheet-h{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;line-height:1.15;margin-bottom:6px;}
+.sheet-h em{color:var(--gold);font-style:italic;}
+.sheet-sub{font-size:13px;color:var(--off);line-height:1.55;}
+.sheet-roi{display:flex;gap:0;margin-top:12px;}
+.sheet-roi-i{flex:1;text-align:center;padding:8px 6px;border:1px solid var(--bordergold);background:var(--golddim);}
+.sheet-roi-i:first-child{border-radius:7px 0 0 7px;}.sheet-roi-i:last-child{border-radius:0 7px 7px 0;}.sheet-roi-i+.sheet-roi-i{border-left:none;}
+.sheet-roi-v{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--gold);display:block;line-height:1;margin-bottom:3px;}
+.sheet-roi-l{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+
+.steps{padding:18px 22px 4px;display:flex;flex-direction:column;}
+.step{display:flex;gap:0;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;}
+.step.show{opacity:1;transform:translateY(0);}
+.step-left{display:flex;flex-direction:column;align-items:center;width:38px;flex-shrink:0;}
+.step-ic{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--golddim);border:1px solid var(--bordergold);z-index:1;}
+.step-ic.sys-ghl{background:rgba(123,95,255,.14);border-color:rgba(123,95,255,.32);}
+.step-ic.sys-qb{background:rgba(44,160,28,.14);border-color:rgba(44,160,28,.32);}
+.step-ic.sys-dx{background:rgba(0,97,255,.14);border-color:rgba(0,97,255,.32);}
+.step-line{width:2px;flex:1;min-height:14px;margin:3px 0;background:linear-gradient(180deg,var(--bordergold),transparent);}
+.step:last-child .step-line{display:none;}
+.step-right{flex:1;padding:0 0 18px 12px;min-width:0;}
+.step:last-child .step-right{padding-bottom:8px;}
+.step-tag{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:4px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
+.tag-ghl{background:rgba(123,95,255,.12);color:#9F8BFF;border:1px solid rgba(123,95,255,.28);}
+.tag-qb{background:rgba(44,160,28,.12);color:#5BD24A;border:1px solid rgba(44,160,28,.28);}
+.tag-dx{background:rgba(0,97,255,.12);color:#5C9BFF;border:1px solid rgba(0,97,255,.28);}
+.tag-adj{background:var(--golddim);color:var(--gold);border:1px solid var(--bordergold);}
+.step-title{font-size:13px;font-weight:500;line-height:1.35;margin-bottom:4px;}
+.step-body{font-size:12.5px;color:var(--off);line-height:1.55;}
+.step-time{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--muted);margin-top:4px;letter-spacing:.06em;}
+.step-art{margin-top:8px;padding:9px 11px;background:var(--card);border:1px solid var(--border);border-radius:7px;font-family:'DM Mono',monospace;font-size:11px;color:var(--off);line-height:1.5;white-space:pre-wrap;}
+.step-art b{color:var(--white);font-weight:500;}
+
+/* TOAST */
+.toast{position:fixed;left:18px;right:18px;top:calc(70px + var(--safe-top));background:var(--card);border:1px solid var(--bordergold);border-left:3px solid var(--gold);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:11px;z-index:120;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(-180%);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+.toast.show{transform:translateY(0);}
+.toast-ic{width:28px;height:28px;border-radius:50%;background:var(--golddim);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.toast-body{flex:1;min-width:0;}
+.toast-t{font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;margin-bottom:1px;}
+.toast-m{font-size:12.5px;font-weight:500;line-height:1.3;}
+
+/* RUNNING BANNER */
+.runbar{padding:14px 18px;background:var(--golddim);border-top:1px solid var(--bordergold);border-bottom:1px solid var(--bordergold);display:none;align-items:center;gap:11px;}
+.runbar.show{display:flex;}
+.runbar-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);animation:pulse 1.3s infinite;}
+.runbar-t{flex:1;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.55;transform:scale(.85);}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-12px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+.slide-in{animation:slideIn .5s cubic-bezier(.2,.8,.2,1) both;}
+
+/* INSTALL HINT */
+.install-hint{position:fixed;left:14px;right:14px;bottom:calc(96px + var(--safe-bot));background:var(--card);border:1px solid var(--bordergold);border-radius:10px;padding:12px 14px;display:none;align-items:center;gap:11px;z-index:55;animation:fadeUp .4s both;}
+.install-hint.show{display:flex;}
+.install-hint-t{flex:1;font-size:12px;line-height:1.4;color:var(--off);}
+.install-hint-t b{color:var(--gold);font-weight:500;}
+.install-hint button{background:transparent;border:none;color:var(--muted);font-size:18px;line-height:1;padding:4px 8px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ========= SPLASH ========= -->
+<div id="splash">
+  <div class="sp-pre">eProxim · Adjutant · Live Demo</div>
+  <h1 class="sp-h1">Watch it <em>work</em>.</h1>
+  <p class="sp-p">Three systems. One assistant. Real flows, running while you sleep.</p>
+  <div class="sp-conn">
+    <div class="sp-conn-row"><span class="sp-conn-dot"></span><span class="sp-conn-name">GoHighLevel · CRM</span><span class="sp-conn-status">Connected</span></div>
+    <div class="sp-conn-row"><span class="sp-conn-dot"></span><span class="sp-conn-name">QuickBooks · Books</span><span class="sp-conn-status">Connected</span></div>
+    <div class="sp-conn-row"><span class="sp-conn-dot"></span><span class="sp-conn-name">Dropbox · Files</span><span class="sp-conn-status">Connected</span></div>
+  </div>
+  <button class="sp-btn" id="enterBtn">Open the Brief</button>
+  <div class="sp-foot">Demo data · No live OAuth in this build</div>
+</div>
+
+<!-- ========= APP ========= -->
+<div id="app">
+  <div class="tbar">
+    <div class="tbar-brand"><em>e</em>Proxim · Adjutant</div>
+    <div class="tbar-sp"></div>
+    <div class="tbar-date" id="topDate"></div>
+    <div class="tbar-live"><span class="tbar-live-dot"></span><span>Live</span></div>
+  </div>
+
+  <div class="intg">
+    <div class="intg-chip"><span class="ic ghl-ic">G</span><span>GoHighLevel</span><span class="dot"></span></div>
+    <div class="intg-chip"><span class="ic qb-ic">Q</span><span>QuickBooks</span><span class="dot"></span></div>
+    <div class="intg-chip"><span class="ic dx-ic">D</span><span>Dropbox</span><span class="dot"></span></div>
+  </div>
+
+  <div class="runbar" id="runbar">
+    <span class="runbar-dot"></span>
+    <span class="runbar-t" id="runbarText">Adjutant working…</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-greet">Good morning, Jayant</div>
+    <h2 class="hero-h"><span id="countNum">11</span> things <em>handled</em><br>while you slept.</h2>
+    <p class="hero-sub">Adjutant ran across your CRM, books, and file system overnight. Here's the brief.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile gold"><span class="tile-v" id="tileCash">$14,200</span><span class="tile-l">Collected<br>overnight</span></div>
+    <div class="tile"><span class="tile-v" id="tileLeads">4</span><span class="tile-l">Leads<br>qualified</span></div>
+    <div class="tile"><span class="tile-v" id="tileFiles">7</span><span class="tile-l">Files<br>filed</span></div>
+  </div>
+
+  <div class="shdr">
+    <span class="shdr-t">Activity · Last 12 hours</span>
+    <span class="shdr-c" id="activityCount">11 actions</span>
+  </div>
+
+  <div class="feed" id="feed"></div>
+</div>
+
+<!-- ========= TOAST ========= -->
+<div class="toast" id="toast">
+  <div class="toast-ic" id="toastIc">⚡</div>
+  <div class="toast-body">
+    <div class="toast-t" id="toastT">Adjutant</div>
+    <div class="toast-m" id="toastM">Working…</div>
+  </div>
+</div>
+
+<!-- ========= BOTTOM SHEET ========= -->
+<div class="sheet-back" id="sheetBack"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grip"></div>
+  <div class="sheet-hd">
+    <div class="sheet-pre" id="shPre">Action Trail</div>
+    <h3 class="sheet-h" id="shTitle">Title</h3>
+    <p class="sheet-sub" id="shSub">Sub</p>
+    <div class="sheet-roi" id="shRoi"></div>
+  </div>
+  <div class="steps" id="shSteps"></div>
+</div>
+
+<!-- ========= STICKY BAR ========= -->
+<div class="bbar">
+  <button class="bbar-btn" id="runBtn">Run Live Demo</button>
+  <button class="bbar-btn ghost" id="resetBtn">Reset</button>
+</div>
+
+<!-- ========= INSTALL HINT ========= -->
+<div class="install-hint" id="installHint">
+  <div class="install-hint-t"><b>Add to Home Screen</b> for the full app experience on your phone.</div>
+  <button id="installDismiss" aria-label="Dismiss">×</button>
+</div>
+
+<script>
+// ============================================================
+// DATA — mocked but carefully crafted to feel real
+// ============================================================
+const SYS = {
+  GHL: { tag:'tag-ghl', ic:'sys-ghl', name:'GoHighLevel', short:'GHL', chainIc:'ghl-ic', letter:'G' },
+  QB:  { tag:'tag-qb',  ic:'sys-qb',  name:'QuickBooks', short:'QB',  chainIc:'qb-ic',  letter:'Q' },
+  DX:  { tag:'tag-dx',  ic:'sys-dx',  name:'Dropbox',    short:'DX',  chainIc:'dx-ic',  letter:'D' },
+  ADJ: { tag:'tag-adj', ic:'',        name:'Adjutant',   short:'ADJ', chainIc:'',       letter:'A' }
+};
+
+const SEED_ACTIONS = [
+  {
+    id:'a1', icon:'💰', title:'Mercer Group — paid $5,500',
+    sub:'INV-4105 · 22 days overdue · settled',
+    time:'04:17',
+    body:'Mercer wired the overdue balance overnight. Adjutant <b>matched the deposit</b>, marked the invoice paid, filed the receipt, and replied with a thank-you from your address.',
+    roi:[{v:'$5,500',l:'Collected'},{v:'22 days',l:'Overdue cleared'},{v:'14 min',l:'Saved'}],
+    chain:['QB','DX','GHL'],
+    pre:'Invoice Collected',
+    sheetTitle:'Mercer Group — <em>paid in full</em>',
+    sheetSub:'A wire hit your QuickBooks deposit account at 4:17 AM. Adjutant reconciled, filed, and closed the loop before sunrise.',
+    steps:[
+      {sys:'QB',ico:'💳',tag:'QB · Deposit detected',title:'Wire deposit hit the operations account',body:'$5,500.00 from "MERCER GROUP LLC" reference INV4105.',time:'04:17 AM',art:'<b>$5,500.00</b>  ·  MERCER GROUP LLC\nRef: INV4105  ·  Account: Operations'},
+      {sys:'ADJ',ico:'⚡',tag:'ADJ · Matched',title:'Reconciled to invoice #4105',body:'Auto-matched on reference, payer name, and amount. Confidence: 99%.',time:'04:17 AM'},
+      {sys:'QB',ico:'✓',tag:'QB · Updated',title:'Invoice marked paid, balance cleared',body:'Status flipped to Paid. AR aging report regenerated.',time:'04:18 AM'},
+      {sys:'DX',ico:'📁',tag:'DX · Filed',title:'Receipt PDF stored',body:'Saved to <b>/Clients/Mercer Group/2026/Receipts/</b> with standard naming.',time:'04:18 AM',art:'/Clients/Mercer Group/2026/Receipts/\n  2026-05-23_INV-4105_PAID_$5500.pdf'},
+      {sys:'GHL',ico:'✉️',tag:'GHL · Sent',title:'Thank-you note sent to Mercer',body:'Polite confirmation from your address, signed with your name. CRM activity logged.',time:'04:19 AM',art:'To: ap@mercergroup.com\nFrom: jayant@eproxim.com\nSubject: Payment received — thank you\n\nHi Karen — payment for INV-4105 is in. Appreciate it. — Jayant'}
+    ]
+  },
+  {
+    id:'a2', icon:'🎯', title:'New lead: Halberd Industries',
+    sub:'GHL form · qualified · booked Tue 10:30 AM',
+    time:'02:44',
+    body:'Inbound form at 2:44 AM. Adjutant ran the <b>qualification flow</b>, scored them an A, booked a discovery call on your calendar, and prepped a one-pager in their folder.',
+    roi:[{v:'A-grade',l:'Lead score'},{v:'Tue 10:30',l:'Booked'},{v:'< 4 min',l:'Response time'}],
+    chain:['GHL','DX'],
+    pre:'Lead Qualified',
+    sheetTitle:'Halberd Industries — <em>booked</em>',
+    sheetSub:'A pipeline lead arrived overnight, got qualified, scored, scheduled, and prepped — without anyone touching a keyboard.',
+    steps:[
+      {sys:'GHL',ico:'📨',tag:'GHL · New contact',title:'Form submission received',body:'Tom Harkness, COO, Halberd Industries — 80 staff, manufacturing. Looking for fractional finance ops.',time:'02:44 AM',art:'Name: Tom Harkness\nCompany: Halberd Industries\nRole: COO  ·  Headcount: 80\nNeed: "We need to fix month-end close. 12 days currently."'},
+      {sys:'ADJ',ico:'🧠',tag:'ADJ · Scored',title:'Qualification — Grade A',body:'Matches ICP: 50–250 headcount, services/manufacturing, named buyer, urgency signal in copy.',time:'02:45 AM'},
+      {sys:'GHL',ico:'📅',tag:'GHL · Booked',title:'Calendar invite sent — Tue 10:30 AM',body:'Picked an open 30-min slot. Sent the invite with a Zoom link and your bio.',time:'02:46 AM'},
+      {sys:'GHL',ico:'💬',tag:'GHL · Replied',title:'Tom got a confirmation in 4 minutes',body:'Personalized reply referencing his close-time pain. Logged to CRM.',time:'02:48 AM',art:'Subject: Tue 10:30 — locked in\n\nTom — got you on the calendar. Bringing a one-pager on cutting your close from 12 to 5 days. — J'},
+      {sys:'DX',ico:'📂',tag:'DX · Prepped',title:'Account folder created with brief',body:'Folder + one-pager written from public filings & website language.',time:'02:51 AM',art:'/Prospects/Halberd Industries/\n  brief.pdf\n  call-prep_Tue-1030.md\n  research/'}
+    ]
+  },
+  {
+    id:'a3', icon:'📝', title:'Contract signed — Vance Holdings',
+    sub:'Dropbox Sign · countersigned · filed · billed',
+    time:'23:11',
+    body:'Vance countersigned the engagement at 11:11 PM. Adjutant <b>filed both copies</b>, kicked off onboarding in GHL, and issued the first-month retainer invoice for $4,500.',
+    roi:[{v:'$4,500',l:'First invoice'},{v:'2 min',l:'Sign → billed'},{v:'0 hrs',l:'Your time'}],
+    chain:['DX','GHL','QB'],
+    pre:'Contract Closed',
+    sheetTitle:'Vance Holdings — <em>signed & onboarded</em>',
+    sheetSub:'Engagement countersigned late evening. Adjutant flipped them from prospect to client and billed the first month — no Monday inbox panic required.',
+    steps:[
+      {sys:'DX',ico:'✍️',tag:'DX · Signed',title:'Engagement letter countersigned',body:'Both signatures captured. Dropbox Sign webhook fired.',time:'11:11 PM'},
+      {sys:'DX',ico:'📁',tag:'DX · Filed',title:'Final PDF stored, prospect folder archived',body:'Moved to <b>/Clients/Vance Holdings/Contracts/</b>. Original prospect folder zipped to /Archive/.',time:'11:12 PM',art:'/Clients/Vance Holdings/Contracts/\n  2026-05-22_Engagement_Vance_signed.pdf'},
+      {sys:'GHL',ico:'🚦',tag:'GHL · Promoted',title:'Pipeline stage → Active Client',body:'Tags updated. Onboarding workflow started: welcome sequence, intake survey, kickoff slot offered.',time:'11:13 PM'},
+      {sys:'QB',ico:'🧾',tag:'QB · Invoiced',title:'First retainer invoice issued — $4,500',body:'Created on the standard monthly template. Sent. Tracked.',time:'11:13 PM',art:'INV-4901  ·  Vance Holdings\nMay retainer  ·  $4,500.00\nNet 14  ·  Due Jun 5'}
+    ]
+  },
+  {
+    id:'a4', icon:'⏰', title:'3 invoices chased',
+    sub:'Acme · Bell & Assoc. · Cordis — staged & sent',
+    time:'06:02',
+    body:'Adjutant ran the morning chase pass. <b>Three reminders</b> went out — each with the right tone for that client and a Pay-Now link.',
+    roi:[{v:'$16,840',l:'Chased'},{v:'3 emails',l:'Sent'},{v:'1 hr',l:'Saved'}],
+    chain:['QB','GHL'],
+    pre:'Receivables Chase',
+    sheetTitle:'AR chase — <em>three tonal nudges</em>',
+    sheetSub:'Adjutant pulled the aging report at 6 AM, picked the right tone per client based on history, and sent — each with a single-click pay link.',
+    steps:[
+      {sys:'QB',ico:'📊',tag:'QB · Read',title:'Pulled AR aging report',body:'Three accounts past Net 30 with no recent communication.',time:'06:02 AM'},
+      {sys:'ADJ',ico:'🧠',tag:'ADJ · Decided',title:'Picked tone per client',body:'Acme — firm (3rd notice). Bell — friendly (first nudge). Cordis — service-recovery (had a billing question).',time:'06:02 AM'},
+      {sys:'GHL',ico:'✉️',tag:'GHL · Sent',title:'3 emails out, all with Pay-Now links',body:'From your address. Logged to contact records. Replies route back to you.',time:'06:04 AM',art:'Acme Corp           INV-4821   $8,240   47d   3rd notice\nBell & Associates    INV-3902   $3,100   31d   first nudge\nCordis Partners      INV-4640   $5,500   18d   recovery'}
+    ]
+  },
+  {
+    id:'a5', icon:'📦', title:'Weekly client folders organized',
+    sub:'12 client folders · 47 files filed',
+    time:'01:30',
+    body:'The Saturday-night tidy. Adjutant <b>routed 47 loose files</b> from the Inbox into their correct client folders with naming conventions applied.',
+    roi:[{v:'47 files',l:'Filed'},{v:'12 clients',l:'Touched'},{v:'2 hrs',l:'Saved'}],
+    chain:['DX'],
+    pre:'File Hygiene',
+    sheetTitle:'Inbox → <em>filed</em>',
+    sheetSub:'The kind of admin nobody does until Friday. Adjutant does it Saturday night.',
+    steps:[
+      {sys:'DX',ico:'📥',tag:'DX · Scanned',title:'Read 47 files in /Inbox/',body:'Receipts, scans, photos, emailed attachments — all sitting loose.',time:'01:30 AM'},
+      {sys:'ADJ',ico:'🧠',tag:'ADJ · Classified',title:'Matched each file to a client',body:'Used header text, sender, line items, and vendor logos to route. 46 routed confidently. 1 flagged for your review.',time:'01:31 AM'},
+      {sys:'DX',ico:'📁',tag:'DX · Filed',title:'Moved & renamed in standard format',body:'<b>YYYY-MM-DD_Vendor_Type_$Amount.ext</b> across all client folders.',time:'01:33 AM',art:'/Clients/Mercer Group/Receipts/2026/\n/Clients/Acme Corp/Receipts/2026/\n/Clients/Halberd Industries/Receipts/2026/\n… 9 more'}
+    ]
+  }
+];
+
+// Used when "Run Live Demo" fires — a brand-new lead arriving + cross-system chain
+const DEMO_ACTION = {
+  id:'demo', icon:'⚡', title:'Live: New lead — Quill & Reeve',
+  sub:'GHL · qualified · booked · brief prepped',
+  body:'A fresh lead just arrived. Watch Adjutant move it across all three systems in real time.',
+  roi:[{v:'A-grade',l:'Lead score'},{v:'Thu 2:00',l:'Booked'},{v:'47 sec',l:'End-to-end'}],
+  chain:['GHL','DX'],
+  pre:'Live · Just Now',
+  sheetTitle:'Quill & Reeve — <em>live</em>',
+  sheetSub:'Watch the chain: GHL form → qualification → calendar → Dropbox prep.',
+  steps:[
+    {sys:'GHL',ico:'📨',tag:'GHL · Form',title:'New form submission',body:'Marin Quill, Partner — boutique law firm, 24 staff.',time:'just now'},
+    {sys:'ADJ',ico:'🧠',tag:'ADJ · Scored',title:'Qualification — Grade A',body:'Matches ICP, named decision-maker, explicit pain in copy.',time:'+ 8 sec'},
+    {sys:'GHL',ico:'📅',tag:'GHL · Booked',title:'Discovery call — Thursday 2:00 PM',body:'Open slot grabbed. Calendar invite sent with Zoom link.',time:'+ 22 sec'},
+    {sys:'GHL',ico:'💬',tag:'GHL · Replied',title:'Personalized reply sent',body:'Hand-written tone, references their pain point.',time:'+ 31 sec'},
+    {sys:'DX',ico:'📂',tag:'DX · Prep',title:'Account folder + research brief',body:'Folder created. One-pager drafted from their website.',time:'+ 47 sec'}
+  ]
+};
+
+const LIVE_TOASTS = [
+  {ic:'📨',t:'GoHighLevel',m:'New lead: Marin Quill — Quill & Reeve'},
+  {ic:'🧠',t:'Adjutant',m:'Qualified · Grade A · matches ICP'},
+  {ic:'📅',t:'GoHighLevel',m:'Calendar invite sent · Thu 2:00 PM'},
+  {ic:'💬',t:'GoHighLevel',m:'Personalized reply sent to Marin'},
+  {ic:'📂',t:'Dropbox',m:'Folder created · brief.pdf written'}
+];
+
+// ============================================================
+// RENDER
+// ============================================================
+let actions = SEED_ACTIONS.slice();
+let running = false;
+
+function chainHTML(chain){
+  return chain.map((sys,i)=>{
+    const s = SYS[sys];
+    const pill = `<span class="chain-pill"><span class="icx ${s.chainIc}">${s.letter}</span>${s.short}</span>`;
+    return i === 0 ? pill : `<span class="chain-arrow">→</span>${pill}`;
+  }).join('');
+}
+
+function cardHTML(a, fresh=false){
+  return `<div class="card ${fresh?'fresh slide-in':''}" data-id="${a.id}">
+    <div class="card-top">
+      <div class="card-icon">${a.icon}</div>
+      <div class="card-meta">
+        <div class="card-title">${a.title}</div>
+        <div class="card-sub">${a.sub}</div>
+      </div>
+      <div class="card-time">${a.time||''}</div>
+    </div>
+    <div class="card-body">${a.body}</div>
+    <div class="card-chain">${chainHTML(a.chain)}</div>
+  </div>`;
+}
+
+function renderFeed(){
+  const feed = document.getElementById('feed');
+  feed.innerHTML = actions.map(a => cardHTML(a, a.fresh)).join('');
+  feed.querySelectorAll('.card').forEach(c => {
+    c.addEventListener('click', () => openSheet(c.dataset.id));
+  });
+  document.getElementById('activityCount').textContent = `${actions.length} action${actions.length===1?'':'s'}`;
+}
+
+function openSheet(id){
+  const a = actions.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('shPre').textContent = a.pre;
+  document.getElementById('shTitle').innerHTML = a.sheetTitle;
+  document.getElementById('shSub').textContent = a.sheetSub;
+  document.getElementById('shRoi').innerHTML = a.roi.map(r =>
+    `<div class="sheet-roi-i"><span class="sheet-roi-v">${r.v}</span><span class="sheet-roi-l">${r.l}</span></div>`
+  ).join('');
+  const stepsEl = document.getElementById('shSteps');
+  stepsEl.innerHTML = a.steps.map(s => {
+    const sys = SYS[s.sys];
+    return `<div class="step">
+      <div class="step-left">
+        <div class="step-ic ${sys.ic||''}">${s.ico}</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-right">
+        <span class="step-tag ${sys.tag}">${s.tag}</span>
+        <div class="step-title">${s.title}</div>
+        <div class="step-body">${s.body}</div>
+        ${s.art ? `<div class="step-art">${s.art}</div>` : ''}
+        <div class="step-time">${s.time}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sheetBack').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Reveal steps progressively
+  const stepEls = stepsEl.querySelectorAll('.step');
+  stepEls.forEach((el, i) => setTimeout(() => el.classList.add('show'), 80 + i*110));
+}
+
+function closeSheet(){
+  document.getElementById('sheetBack').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('sheetBack').addEventListener('click', closeSheet);
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastQ = [];
+let toastBusy = false;
+function showToast(ic, t, m, dur=1900){
+  toastQ.push({ic,t,m,dur});
+  if (!toastBusy) drainToast();
+}
+function drainToast(){
+  if (!toastQ.length){ toastBusy = false; return; }
+  toastBusy = true;
+  const {ic,t,m,dur} = toastQ.shift();
+  document.getElementById('toastIc').textContent = ic;
+  document.getElementById('toastT').textContent = t;
+  document.getElementById('toastM').textContent = m;
+  document.getElementById('toast').classList.add('show');
+  setTimeout(() => {
+    document.getElementById('toast').classList.remove('show');
+    setTimeout(drainToast, 280);
+  }, dur);
+}
+
+// ============================================================
+// LIVE DEMO
+// ============================================================
+async function runDemo(){
+  if (running) return;
+  running = true;
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  runBtn.textContent = 'Adjutant working…';
+
+  const runbar = document.getElementById('runbar');
+  const runbarText = document.getElementById('runbarText');
+  runbar.classList.add('show');
+
+  const startTime = Date.now();
+  for (let i = 0; i < LIVE_TOASTS.length; i++){
+    const tst = LIVE_TOASTS[i];
+    runbarText.textContent = `Adjutant · step ${i+1} of ${LIVE_TOASTS.length} — ${tst.t}`;
+    showToast(tst.ic, tst.t, tst.m, 1700);
+    await sleep(1900);
+  }
+
+  // Add the live card to the top
+  actions = [{...DEMO_ACTION, time:'just now', fresh:true}, ...actions.map(a => ({...a, fresh:false}))];
+  renderFeed();
+
+  // Bump counters
+  bumpStat('countNum', 1);
+  bumpStat('tileLeads', 1);
+
+  runbar.classList.remove('show');
+  runBtn.disabled = false;
+  runBtn.textContent = 'Run Live Demo';
+  running = false;
+
+  // Auto-open the new card
+  setTimeout(() => openSheet('demo'), 200);
+}
+
+function bumpStat(id, by){
+  const el = document.getElementById(id);
+  if (!el) return;
+  const cur = parseInt(el.textContent.replace(/[^0-9]/g,''),10) || 0;
+  el.textContent = (cur + by).toString();
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// RESET
+// ============================================================
+function reset(){
+  actions = SEED_ACTIONS.slice();
+  document.getElementById('countNum').textContent = '11';
+  document.getElementById('tileCash').textContent = '$14,200';
+  document.getElementById('tileLeads').textContent = '4';
+  document.getElementById('tileFiles').textContent = '7';
+  renderFeed();
+  closeSheet();
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+function fmtDate(){
+  const d = new Date();
+  const opts = {weekday:'short', month:'short', day:'numeric'};
+  return d.toLocaleDateString('en-US', opts).toUpperCase();
+}
+
+document.getElementById('topDate').textContent = fmtDate();
+
+document.getElementById('enterBtn').addEventListener('click', () => {
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('app').classList.add('live');
+  setTimeout(() => document.getElementById('splash').remove(), 500);
+  maybeShowInstallHint();
+});
+
+document.getElementById('runBtn').addEventListener('click', runDemo);
+document.getElementById('resetBtn').addEventListener('click', reset);
+
+renderFeed();
+
+// ============================================================
+// INSTALL HINT (iOS Safari has no beforeinstallprompt; show static hint)
+// ============================================================
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+function maybeShowInstallHint(){
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+  if (sessionStorage.getItem('installHintDismissed')) return;
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (!isMobile) return;
+  setTimeout(() => document.getElementById('installHint').classList.add('show'), 3000);
+}
+
+document.getElementById('installDismiss').addEventListener('click', () => {
+  document.getElementById('installHint').classList.remove('show');
+  sessionStorage.setItem('installHintDismissed', '1');
+});
+
+// ============================================================
+// SERVICE WORKER
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
